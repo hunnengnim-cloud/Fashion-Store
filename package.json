@@ -1,0 +1,13 @@
+{
+  "name": "clothing-shop-workspace",
+  "private": true,
+  "description": "Fashion Store - Frontend (React + Vite) & Backend (Laravel API)",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "backend:serve": "php backend/artisan serve --host=127.0.0.1 --port=8000"
+  }
+}
+
