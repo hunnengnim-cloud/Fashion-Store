@@ -946,6 +946,33 @@ export default function AuthPage({ onNavigate }) {
             </div>
 
             <div className="google-modal-body">
+              {/* Option to Launch Official Google Popup Window directly */}
+              <button
+                type="button"
+                className="btn btn-outline btn-full"
+                onClick={() => {
+                  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '807451740826-s1hjpgobj095kg9f877avfkrv0909rae.apps.googleusercontent.com';
+                  launchGoogleOAuth(clientId);
+                }}
+                style={{
+                  borderRadius: 999,
+                  padding: '10px 16px',
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  marginBottom: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  borderColor: 'rgba(66, 133, 244, 0.5)',
+                  background: 'rgba(66, 133, 244, 0.04)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <GoogleIcon size={16} />
+                <span>{lang === 'km' ? '🌐 បើកផ្ទាំង Google Popup ផ្លូវការ' : '🌐 Open Official Google OAuth Popup'}</span>
+              </button>
+
               {/* 1. Official Google Account Chooser List */}
               <div style={{ marginBottom: 14 }}>
                 <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 10 }}>

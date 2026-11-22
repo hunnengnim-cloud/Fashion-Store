@@ -6032,8 +6032,31 @@ body {
   }
 }
 
+/* ── Modal Backdrop & Google Quick Sign-In Modal ── */
+.modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(10, 10, 14, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  overflow-y: auto !important;
+  animation: modalBackdropFade 0.22s ease-out !important;
+}
+
+@keyframes modalBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* 2. Google Quick Sign-In Modal */
 .google-quick-modal {
+  position: relative !important;
+  z-index: 1000000 !important;
   max-width: 440px !important;
   width: 92% !important;
   border-radius: 24px !important;
@@ -6041,6 +6064,7 @@ body {
   border: 1.5px solid rgba(200, 169, 106, 0.4) !important;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
   padding: 22px 20px !important;
+  margin: auto !important;
   animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
