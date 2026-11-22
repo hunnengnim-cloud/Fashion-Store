@@ -265,7 +265,7 @@ export default function AuthPage({ onNavigate }) {
       if (validStored && validStored.includes('.apps.googleusercontent.com') && !validStored.includes('@')) {
         return validStored;
       }
-    } catch (_) {}
+    } catch (_) { }
     return DEFAULT_GOOGLE_CLIENT_ID;
   };
 
@@ -278,7 +278,7 @@ export default function AuthPage({ onNavigate }) {
       if (stored && (stored.includes('@') || !stored.includes('.apps.googleusercontent.com'))) {
         localStorage.removeItem('cs_google_client_id');
       }
-    } catch (_) {}
+    } catch (_) { }
   }, []);
 
   const handleGoogleAccessToken = async (accessToken) => {
@@ -325,7 +325,7 @@ export default function AuthPage({ onNavigate }) {
           handleGoogleAccessToken(token);
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   }, []);
 
   // 2. Direct Browse to Google's official Sign-In / Account Chooser page
@@ -413,10 +413,10 @@ export default function AuthPage({ onNavigate }) {
 
         const user = isAdmin
           ? {
-              ...rawUser,
-              role: 'super_admin',
-              roles: ['super_admin'],
-            }
+            ...rawUser,
+            role: 'super_admin',
+            roles: ['super_admin'],
+          }
           : rawUser;
 
         setAuth(token, user);
@@ -596,15 +596,15 @@ export default function AuthPage({ onNavigate }) {
               {roleTab === 'admin'
                 ? t.adminConsole
                 : mode === 'login'
-                ? t.welcomeBack
-                : t.createCustomerAccount}
+                  ? t.welcomeBack
+                  : t.createCustomerAccount}
             </h2>
             <p className="auth-subtitle">
               {roleTab === 'admin'
                 ? t.adminSubtitle
                 : mode === 'login'
-                ? t.customerLoginSubtitle
-                : t.customerRegisterSubtitle}
+                  ? t.customerLoginSubtitle
+                  : t.customerRegisterSubtitle}
             </p>
           </div>
 
@@ -810,10 +810,10 @@ export default function AuthPage({ onNavigate }) {
                 {loading
                   ? t.verifying
                   : roleTab === 'admin'
-                  ? t.btnAdminLogin
-                  : mode === 'login'
-                  ? t.btnCustomerLogin
-                  : t.btnCustomerRegister}
+                    ? t.btnAdminLogin
+                    : mode === 'login'
+                      ? t.btnCustomerLogin
+                      : t.btnCustomerRegister}
               </span>
               {!loading && <ArrowRightIcon size={16} />}
             </button>

@@ -617,7 +617,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
             <button type="button" className="nav-icon-btn" onClick={() => setSearchOpen(true)} title={t.nav.searchTitle} aria-label="Search">
               <SearchIcon size={18} />
             </button>
-            <button type="button" className="nav-icon-btn" onClick={onToggleTheme} title={t.nav.themeTitle} aria-label="Toggle Theme">
+            <button type="button" className="nav-icon-btn nav-theme-toggle-btn" onClick={onToggleTheme} title={t.nav.themeTitle} aria-label="Toggle Theme">
               {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
             </button>
             <button type="button" className="nav-icon-btn" onClick={() => setWishlistOpen(true)} title={t.nav.wishlistTitle} aria-label="Wishlist">
