@@ -1058,8 +1058,8 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
 
     notify(
       isCod
-        ? (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ត្រូវបានទទួលយកភ្លាមៗ! (COD Order Accepted)` : `🎉 Order ${orderNum} placed successfully! (COD Order Accepted)`)
-        : (lang === 'km' ? `🎉 ការទូទាត់ប្រាក់តាម Bakong KHQR បានជោគជ័យ!` : `🎉 Bakong KHQR Payment for ${orderNum} Received!`),
+        ? (lang === 'km' ? `🎉 ការបញ្ជាទិញលេខ ${orderNum} ទទួលបានជោគជ័យ!` : `🎉 Order ${orderNum} placed successfully!`)
+        : (lang === 'km' ? `🎉 ការទូទាត់ប្រាក់តាមបាគង KHQR បានជោគជ័យ!` : `🎉 Bakong KHQR Payment for ${orderNum} Received!`),
       'success',
       4500
     );
@@ -1197,7 +1197,9 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
               {/* AI Voice Indicator Banner & Soundwave */}
               <div className="payment-ai-voice-banner">
                 <div className="ai-voice-info">
-                  <span className="ai-voice-badge">🎙️ AI Audio Voice</span>
+                  <span className="ai-voice-badge">
+                    {lang === 'km' ? '🎙️ សំឡេង AI បញ្ជាក់ការទូទាត់' : '🎙️ AI Voice Announcement'}
+                  </span>
                   <div className="ai-voice-waves" aria-hidden="true">
                     <span className="ai-wave-bar" />
                     <span className="ai-wave-bar" />
@@ -1218,24 +1220,26 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
               {/* Order Summary Receipt Box */}
               <div className="payment-receipt-card">
                 <div className="payment-receipt-row">
-                  <span className="receipt-label">{lang === 'km' ? 'លេខវិក្កយបត្រ (Order ID)' : 'Order ID'}</span>
+                  <span className="receipt-label">{lang === 'km' ? 'លេខវិក្កយបត្រ' : 'Order ID'}</span>
                   <span className="receipt-val highlight-order">{successOrder.num}</span>
                 </div>
                 <div className="payment-receipt-row">
-                  <span className="receipt-label">{lang === 'km' ? 'ចំនួនទឹកប្រាក់ (Total Paid)' : 'Total Amount'}</span>
+                  <span className="receipt-label">{lang === 'km' ? 'ចំនួនទឹកប្រាក់សរុប' : 'Total Amount'}</span>
                   <span className="receipt-val receipt-amount">
                     {formatUSD(successOrder.total)}{' '}
                     <span className="receipt-khr">({Math.round(successOrder.total * 4100).toLocaleString('en-US')} ៛)</span>
                   </span>
                 </div>
                 <div className="payment-receipt-row">
-                  <span className="receipt-label">{lang === 'km' ? 'វិធីសាស្ត្រទូទាត់ (Payment)' : 'Payment Method'}</span>
+                  <span className="receipt-label">{lang === 'km' ? 'វិធីសាស្ត្រទូទាត់' : 'Payment Method'}</span>
                   <span className="receipt-val text-success">
-                    ✓ {successOrder.payment_method === 'khqr' ? 'Bakong KHQR (Verified ជោគជ័យ)' : successOrder.payment}
+                    {successOrder.payment_method === 'khqr'
+                      ? (lang === 'km' ? '✓ បាគង KHQR ជោគជ័យ' : '✓ Bakong KHQR Verified')
+                      : (lang === 'km' ? '✓ ទូទាត់ពេលទទួលទំនិញ' : '✓ Cash on Delivery')}
                   </span>
                 </div>
                 <div className="payment-receipt-row">
-                  <span className="receipt-label">{lang === 'km' ? 'ក្រុមហ៊ុនដឹកជញ្ជូន (Courier)' : 'Courier Delivery'}</span>
+                  <span className="receipt-label">{lang === 'km' ? 'ក្រុមហ៊ុនដឹកជញ្ជូន' : 'Courier Delivery'}</span>
                   <span className="receipt-val">
                     {successOrder.courier} · <span className="receipt-tracking">{successOrder.tracking_number}</span>
                   </span>
@@ -1253,11 +1257,11 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
                       onOpenOrders();
                     }}
                   >
-                    📦 {lang === 'km' ? 'តាមដានការបញ្ជាទិញ (Track Order)' : 'Track Order Status'}
+                    📦 {lang === 'km' ? 'តាមដានការបញ្ជាទិញ' : 'Track Order Status'}
                   </button>
                 )}
                 <button type="button" className="btn btn-outline btn-success-done" onClick={onClose}>
-                  ✓ {lang === 'km' ? 'រួចរាល់ (Done)' : 'Done'}
+                  ✓ {lang === 'km' ? 'រួចរាល់' : 'Done'}
                 </button>
               </div>
             </div>
@@ -1270,7 +1274,7 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
                     <span className="official-khqr-flag">🇰🇭</span>
                     <span className="official-khqr-title">KHQR</span>
                   </div>
-                  <span className="official-khqr-badge">Bakong Official</span>
+                  <span className="official-khqr-badge">{lang === 'km' ? 'បាគងផ្លូវការ' : 'Bakong Official'}</span>
                 </div>
                 <div className="official-khqr-merchant">
                   <div className="official-khqr-merchant-name">{qrData.merchant_name || 'Huonneng Nim'}</div>
@@ -1419,27 +1423,28 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOp
                     {lang === 'km' ? 'ជ្រើសរើសរហ័ស:' : 'Quick Select:'}
                   </span>
                   {[
-                    { label: 'BKK1 (បឹងកេងកង)', value: 'BKK1, Khan Chamkarmon, Phnom Penh, Cambodia' },
-                    { label: 'Toul Kork (ទួលគោក)', value: 'Toul Kork, Phnom Penh, Cambodia' },
-                    { label: 'Daun Penh (ដូនពេញ)', value: 'Daun Penh, Phnom Penh, Cambodia' },
-                    { label: 'Sen Sok (សែនសុខ)', value: 'Sen Sok, Phnom Penh, Cambodia' },
-                    { label: 'Chroy Changvar (ជ្រោយចង្វារ)', value: 'Chroy Changvar, Phnom Penh, Cambodia' },
-                    { label: 'Siem Reap (សៀមរាប)', value: 'Siem Reap City, Cambodia' },
-                    { label: 'Battambang (បាត់ដំបង)', value: 'Battambang City, Cambodia' },
-                    { label: 'Sihanoukville (កំពង់សោម)', value: 'Sihanoukville, Cambodia' },
+                    { labelKm: 'បឹងកេងកង', labelEn: 'BKK1', value: 'BKK1, Khan Chamkarmon, Phnom Penh, Cambodia' },
+                    { labelKm: 'ទួលគោក', labelEn: 'Toul Kork', value: 'Toul Kork, Phnom Penh, Cambodia' },
+                    { labelKm: 'ដូនពេញ', labelEn: 'Daun Penh', value: 'Daun Penh, Phnom Penh, Cambodia' },
+                    { labelKm: 'សែនសុខ', labelEn: 'Sen Sok', value: 'Sen Sok, Phnom Penh, Cambodia' },
+                    { labelKm: 'ជ្រោយចង្វារ', labelEn: 'Chroy Changvar', value: 'Chroy Changvar, Phnom Penh, Cambodia' },
+                    { labelKm: 'សៀមរាប', labelEn: 'Siem Reap', value: 'Siem Reap City, Cambodia' },
+                    { labelKm: 'បាត់ដំបង', labelEn: 'Battambang', value: 'Battambang City, Cambodia' },
+                    { labelKm: 'កំពង់សោម', labelEn: 'Sihanoukville', value: 'Sihanoukville, Cambodia' },
                   ].map((chip) => {
-                    const isSelected = address.includes(chip.label.split(' ')[0]);
+                    const label = lang === 'km' ? chip.labelKm : chip.labelEn;
+                    const isSelected = address.includes(chip.labelEn) || address.includes(chip.labelKm);
                     return (
                       <button
-                        key={chip.label}
+                        key={chip.labelEn}
                         type="button"
                         className={`map-chip-btn ${isSelected ? 'active' : ''}`}
                         onClick={() => {
                           setAddress(chip.value);
-                          notify(lang === 'km' ? `📍 បានកំណត់ទីតាំង៖ ${chip.label}` : `📍 Selected location: ${chip.label}`, 'success', 2000);
+                          notify(lang === 'km' ? `📍 បានកំណត់ទីតាំង៖ ${label}` : `📍 Selected location: ${label}`, 'success', 2000);
                         }}
                       >
-                        {chip.label}
+                        {label}
                       </button>
                     );
                   })}
@@ -1610,7 +1615,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     setConfirmingNum(null);
     notify(
       lang === 'km'
-        ? `🎉 អបអរសាទរ! លោកអ្នកបានបញ្ជាក់ការទទួលទំនិញ #${orderNum} ជោគជ័យ។ ប្រតិបត្តិការត្រូវបានបញ្ចប់ (Delivered & Paid) 🏁`
+        ? `🎉 អបអរសាទរ! លោកអ្នកបានបញ្ជាក់ការទទួលទំនិញ #${orderNum} ជោគជ័យ។ ប្រតិបត្តិការត្រូវបានបញ្ចប់រួចរាល់ 🏁`
         : `🎉 Congratulations! Order #${orderNum} marked as received. Transaction completed (Delivered & Paid) 🏁`,
       'success',
       4500
@@ -1630,14 +1635,14 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     {
       stage: 1,
       actor: '[Customer]',
-      title: 'Checkout 🛒 (Select COD)',
+      title: 'Checkout 🛒',
       sub: 'Customer selected Cash on Delivery checkout method',
       icon: '🛒',
     },
     {
       stage: 2,
       actor: '[System]',
-      title: 'Order Received 📥 (Pending)',
+      title: 'Order Received 📥',
       sub: 'System accepted the order immediately without prior payment check',
       icon: '📥',
     },
@@ -1650,52 +1655,52 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     },
     {
       stage: 4,
-      actor: '[Logistics Courier & System]',
-      title: 'Shipped & Unpaid 🚚 📍',
+      actor: '[Logistics Courier]',
+      title: 'Out for Delivery 🚚 📍',
       sub: 'Courier delivers items with real-time tracking — Unpaid (prepare cash)',
       icon: '🚚',
     },
     {
       stage: 5,
-      actor: '[Customer & System]',
+      actor: '[Customer & Store]',
       title: 'Delivered & Paid 🏁',
-      sub: 'Customer receives package and pays cash to courier, then confirms on website',
+      sub: 'Customer receives package, pays cash to courier, and completes the order',
       icon: '🏁',
     },
   ] : [
     {
       stage: 1,
       actor: '[អតិថិជន]',
-      title: 'Checkout 🛒 (ជ្រើសរើស COD)',
-      sub: 'អតិថិជនជ្រើសរើសទូទាត់សាច់ប្រាក់ពេលទទួលទំនិញ (Cash on Delivery)',
+      title: 'ការបញ្ជាទិញ 🛒',
+      sub: 'អតិថិជនជ្រើសរើសទូទាត់សាច់ប្រាក់ពេលទទួលទំនិញ',
       icon: '🛒',
     },
     {
       stage: 2,
-      actor: '[ប្រព័ន្ធ]',
-      title: 'ទទួលបានការបញ្ជាទិញ 📥 (Pending)',
-      sub: 'ប្រព័ន្ធទទួលយកការកុម្ម៉ង់ភ្លាមៗ ដោយមិនបាច់ឆែកលុយជាមុនឡើយ',
+      actor: '[ប្រព័ន្ធហាង]',
+      title: 'ទទួលបានការបញ្ជាទិញ 📥',
+      sub: 'ប្រព័ន្ធទទួលយកការកុម្ម៉ង់ភ្លាមៗ ដោយមិនបាច់បង់ប្រាក់ជាមុនឡើយ',
       icon: '📥',
     },
     {
       stage: 3,
-      actor: '[Admin ហាង]',
-      title: 'វេចខ្ចប់ទំនិញ 📦 (Packaging)',
-      sub: 'Admin ហាងរៀបចំទំនិញ ពិនិត្យគុណភាព និងវេចខ្ចប់យ៉ាងមានសុវត្ថិភាព',
+      actor: '[បុគ្គលិកហាង]',
+      title: 'វេចខ្ចប់ទំនិញ 📦',
+      sub: 'បុគ្គលិករៀបចំទំនិញ ពិនិត្យគុណភាព និងវេចខ្ចប់យ៉ាងមានសុវត្ថិភាព',
       icon: '📦',
     },
     {
       stage: 4,
-      actor: '[ក្រុមហ៊ុនដឹកជញ្ជូន & ប្រព័ន្ធ]',
-      title: 'កំពុងដឹកជញ្ជូន 🚚 (Shipped & Unpaid) 📍',
-      sub: 'ក្រុមហ៊ុនដឹកជញ្ជូនយកទំនិញទៅដឹក និងមានលេខ Tracking (សូមត្រៀមសាច់ប្រាក់)',
+      actor: '[ក្រុមហ៊ុនដឹកជញ្ជូន]',
+      title: 'កំពុងដឹកជញ្ជូន 🚚 📍',
+      sub: 'ក្រុមហ៊ុនដឹកជញ្ជូនយកទំនិញទៅដឹកជូន (សូមត្រៀមសាច់ប្រាក់ពេលទំនិញមកដល់)',
       icon: '🚚',
     },
     {
       stage: 5,
-      actor: '[អតិថិជន & ប្រព័ន្ធ]',
-      title: 'បញ្ចប់ប្រតិបត្តិការ 🏁 (Delivered & Paid)',
-      sub: 'អតិថិជនទទួលទំនិញ និងប្រគល់សាច់ប្រាក់ជូនអ្នកដឹកជញ្ជូន រួចចូលមក Website បញ្ជាក់ការទទួលទំនិញ',
+      actor: '[អតិថិជន & ហាង]',
+      title: 'បានដឹកជញ្ជូន និងបង់ប្រាក់រួចរាល់ 🏁',
+      sub: 'អតិថិជនទទួលបានទំនិញ និងប្រគល់សាច់ប្រាក់ជូនអ្នកដឹកជញ្ជូនរួចរាល់',
       icon: '🏁',
     },
   ];
@@ -1715,7 +1720,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
               <span>{lang === 'km' ? `ការបញ្ជាទិញ & ការតាមដានការដឹកជញ្ជូន (${orders.length})` : `My Orders & Delivery Tracking (${orders.length})`}</span>
             </h3>
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {lang === 'km' ? 'ការតាមដានការដឹកជញ្ជូន និងដំណាក់កាល Cash on Delivery (COD)' : 'Cash on Delivery (COD) Real-time Order Tracking & Lifecycle'}
+              {lang === 'km' ? 'ការតាមដានការដឹកជញ្ជូន និងដំណាក់កាលបញ្ជាទិញជាក់ស្ដែង' : 'Cash on Delivery (COD) Real-time Order Tracking & Lifecycle'}
             </span>
           </div>
           <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
@@ -1787,8 +1792,8 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                             }}
                           >
                             {isPaid
-                              ? (lang === 'km' ? '✓ 💵 COD · បង់រួច' : '✓ 💵 COD · PAID')
-                              : (lang === 'km' ? '💵 COD · មិនទាន់បង់' : '💵 COD · UNPAID')}
+                              ? (lang === 'km' ? '✓ 💵 បង់រួចរាល់' : '✓ 💵 COD · PAID')
+                              : (lang === 'km' ? '💵 មិនទាន់បង់' : '💵 COD · UNPAID')}
                           </span>
                         ) : (
                           <span className="badge badge-green" style={{ fontSize: 11, padding: '4px 8px' }}>
@@ -1836,11 +1841,11 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                             <div style={{ fontWeight: 700, color: isPaid ? '#059669' : '#ea580c' }}>
                               {isPaid
                                 ? (lang === 'km' ? 'ប្រតិបត្តិការត្រូវបានបញ្ចប់ — ទទួលបានទំនិញ និងទូទាត់ប្រាក់រួចរាល់' : 'Transaction Completed — Goods Received & Paid')
-                                : (lang === 'km' ? 'Cash on Delivery (COD) — មិនទាន់បង់ប្រាក់ (Unpaid)' : 'Cash on Delivery (COD) — Unpaid')}
+                                : (lang === 'km' ? 'ទូទាត់ពេលទទួលទំនិញ — មិនទាន់បង់ប្រាក់' : 'Cash on Delivery (COD) — Unpaid')}
                             </div>
                             <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                               {isPaid
-                                ? (lang === 'km' ? 'អរគុណសម្រាប់ការគាំទ្រហាង Fashion Store! (Delivered & Paid)' : 'Thank you for supporting Fashion Store! (Delivered & Paid)')
+                                ? (lang === 'km' ? 'អរគុណសម្រាប់ការគាំទ្រហាង Fashion Store! បានដឹកជញ្ជូន និងបង់ប្រាក់រួចរាល់' : 'Thank you for supporting Fashion Store! (Delivered & Paid)')
                                 : (lang === 'km'
                                     ? `សូមត្រៀមសាច់ប្រាក់ចំនួន ${formatUSD(o.total)} (${formatKHR(o.total)}) ប្រគល់ជូនអ្នកដឹកជញ្ជូនពេលទំនិញមកដល់។`
                                     : `Please prepare ${formatUSD(o.total)} (${formatKHR(o.total)}) cash to give to the courier upon arrival.`)}
@@ -1880,7 +1885,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                     <div style={{ padding: '10px 0 6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          {lang === 'km' ? 'ដំណាក់កាលបញ្ជាទិញ (Order Lifecycle)' : 'Order Lifecycle Progress'}
+                          {lang === 'km' ? 'ដំណាក់កាលបញ្ជាទិញ' : 'Order Lifecycle Progress'}
                         </span>
                         <button
                           type="button"
@@ -2099,10 +2104,10 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span>🏁</span>
-                          <span>{lang === 'km' ? '[ប្រព័ន្ធ] បញ្ចប់ប្រតិបត្តិការជោគជ័យ (Delivered & Paid)' : '[System] Transaction Completed (Delivered & Paid)'}</span>
+                          <span>{lang === 'km' ? '[ប្រព័ន្ធ] បញ្ចប់ប្រតិបត្តិការជោគជ័យ' : '[System] Transaction Completed (Delivered & Paid)'}</span>
                         </span>
                         <span style={{ fontSize: 11, background: '#10b981', color: '#fff', padding: '2px 8px', borderRadius: 10 }}>
-                          {lang === 'km' ? '✓ អតិថិជនបានបញ្ជាក់លើ Website រួចរាល់' : '✓ Customer confirmed on website'}
+                          {lang === 'km' ? '✓ អតិថិជនបានបញ្ជាក់លើប្រព័ន្ធរួចរាល់' : '✓ Customer confirmed on website'}
                         </span>
                       </div>
                     )}

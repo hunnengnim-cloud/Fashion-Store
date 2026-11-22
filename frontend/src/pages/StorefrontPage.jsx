@@ -1358,8 +1358,8 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           <div className="footer-bottom">
             <span>© 2026 Fashion Store. All rights reserved.</span>
             <div className="footer-badges">
-              <span className="payment-badge"><CreditCardIcon size={13} /> Bakong KHQR</span>
-              <span className="payment-badge"><ShieldCheckIcon size={13} /> {lang === 'km' ? 'បង់ប្រាក់ពេលទទួល (COD)' : 'Cash on Delivery'}</span>
+              <span className="payment-badge"><CreditCardIcon size={13} /> {lang === 'km' ? 'បាគង KHQR' : 'Bakong KHQR'}</span>
+              <span className="payment-badge"><ShieldCheckIcon size={13} /> {lang === 'km' ? 'បង់ប្រាក់ពេលទទួលទំនិញ' : 'Cash on Delivery'}</span>
               <span className="payment-badge"><TruckIcon size={13} /> {lang === 'km' ? 'ដឹកជញ្ជូនរហ័សទូទាំងប្រទេស' : 'Phnom Penh Express'}</span>
             </div>
           </div>
