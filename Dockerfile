@@ -43,5 +43,10 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
 
 EXPOSE 10000
 
-# Start script: clear config, run database migrations, and serve on Render PORT
-CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=\${PORT:-10000}"
+# Start script: clear config, run database migrations, seed default admin, and serve on Render PORT
+CMD sh -c "\
+    if [ -z \"\$APP_KEY\" ]; then export APP_KEY=\"base64:75WSEAs0S+DK1FMABurulhDtMo5tVV+qPV4z1ShSKJI=\"; fi && \
+    php artisan config:clear && \
+    (php artisan migrate --force || true) && \
+    (php artisan db:seed --class=AdminUserSeeder --force || true) && \
+    php artisan serve --host=0.0.0.0 --port=\${PORT:-10000}"
