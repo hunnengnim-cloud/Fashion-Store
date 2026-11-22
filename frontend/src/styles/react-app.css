@@ -703,40 +703,6 @@ body {
   flex-shrink: 0;
 }
 
-.auth-lang-mobile {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(200, 169, 106, 0.45);
-  background: var(--card-bg, #ffffff);
-  color: var(--text-primary, #1e293b);
-  font-family: 'Kantumruy Pro', 'Battambang', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.auth-lang-mobile:hover,
-.auth-lang-mobile:active {
-  border-color: #c5a059;
-  background: rgba(200, 169, 106, 0.08);
-}
-
-[data-theme="dark"] .auth-lang-mobile {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-  border-color: rgba(200, 169, 106, 0.4);
-}
 
 .auth-back-text-mobile {
   display: none;
@@ -888,16 +854,6 @@ body {
   margin-top: 16px;
 }
 
-/* ── Auth Responsive: Screen Widths <= 1024px: Switch to Photo 2 Compact Pill for All Phones & Tablets ── */
-@media (max-width: 1024px) {
-  .auth-lang-desktop {
-    display: none !important;
-  }
-
-  .auth-lang-mobile {
-    display: inline-flex !important;
-  }
-}
 
 @media (max-width: 960px) {
   .auth-fullscreen-shell {
@@ -1021,11 +977,17 @@ body {
     font-size: 16px !important;
   }
 
-  .auth-lang-mobile {
-    height: 30px !important;
-    padding: 0 8px !important;
-    font-size: 11px !important;
-    gap: 4px !important;
+  .nav-lang-dual-pill {
+    height: 28px !important;
+    padding: 1.5px !important;
+    gap: 1.5px !important;
+  }
+
+  .nav-lang-dual-pill .lang-pill-btn {
+    height: 23px !important;
+    padding: 0 6px !important;
+    font-size: 10px !important;
+    gap: 3px !important;
   }
 
   .auth-pane-back-link {
@@ -6257,94 +6219,67 @@ body,
 }
 
 /* ── Responsive Language Switcher ── */
+/* ── Unified Dual Capsule Language Switcher ([ 🇰🇭 ខ្មែរ  🇬🇧 EN ]) ── */
 .nav-lang-switcher {
   display: inline-flex;
   align-items: center;
 }
 
-.nav-lang-desktop {
+.nav-lang-dual-pill {
   display: inline-flex;
   align-items: center;
-  height: 36px;
-  background: var(--card-bg, #ffffff);
-  border: 1.5px solid var(--border);
-  border-radius: 999px;
-  padding: 2px 3px;
-  gap: 2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.nav-lang-desktop .lang-pill-btn {
-  border: none;
-  height: 28px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 11.5px;
-  padding: 0 9px;
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.nav-lang-desktop .lang-pill-btn.active {
-  background: linear-gradient(135deg, #d4af37, #b8860b);
-  color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);
-}
-
-.nav-lang-mobile {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
   height: 32px;
-  padding: 0 10px;
-  border-radius: 999px;
-  border: 1.5px solid rgba(200, 169, 106, 0.45);
   background: var(--card-bg, #ffffff);
-  color: var(--text-primary, #1e293b);
-  font-family: 'Kantumruy Pro', 'Battambang', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  border: 1.5px solid rgba(200, 169, 106, 0.45);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-lang-mobile:hover,
-.nav-lang-mobile:active {
-  border-color: #c5a059;
-  background: rgba(200, 169, 106, 0.08);
+[data-theme="dark"] .nav-lang-dual-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(200, 169, 106, 0.4);
 }
 
-[data-theme="dark"] .nav-lang-mobile {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-  border-color: rgba(200, 169, 106, 0.4);
+.nav-lang-dual-pill .lang-pill-btn {
+  border: none;
+  height: 26px;
+  background: transparent;
+  color: var(--text-secondary, #6b6560);
+  font-family: 'Kantumruy Pro', 'Battambang', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 11.5px;
+  padding: 0 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-lang-dual-pill .lang-pill-btn:hover {
+  color: var(--text-primary);
+}
+
+.nav-lang-dual-pill .lang-pill-btn.active {
+  background: linear-gradient(135deg, #c5a059 0%, #b38938 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.4) !important;
 }
 
 .nav-signin-mobile {
   display: none;
-}
-
-/* ── Screen Widths <= 1024px: Switch to Photo 2 Compact Pill for All Phones & Tablets ── */
-@media (max-width: 1024px) {
-  .nav-lang-desktop {
-    display: none !important;
-  }
-
-  .nav-lang-mobile {
-    display: inline-flex !important;
-  }
 }
 
 /* ── Mobile Viewport Overrides (Tablets & Phones <= 768px) ── */
@@ -6369,12 +6304,17 @@ body,
     flex-shrink: 0 !important;
   }
 
-  .nav-lang-desktop {
-    display: none !important;
+  .nav-lang-dual-pill {
+    height: 30px !important;
+    padding: 2px !important;
+    gap: 2px !important;
   }
 
-  .nav-lang-mobile {
-    display: inline-flex !important;
+  .nav-lang-dual-pill .lang-pill-btn {
+    height: 24px !important;
+    padding: 0 7px !important;
+    font-size: 11px !important;
+    gap: 4px !important;
   }
 
   .nav-signin-desktop {
@@ -6608,11 +6548,17 @@ body,
     gap: 4px !important;
   }
 
-  .nav-lang-mobile {
-    height: 30px !important;
-    padding: 0 8px !important;
-    font-size: 11px !important;
-    gap: 4px !important;
+  .nav-lang-dual-pill {
+    height: 28px !important;
+    padding: 1.5px !important;
+    gap: 1.5px !important;
+  }
+
+  .nav-lang-dual-pill .lang-pill-btn {
+    height: 23px !important;
+    padding: 0 6px !important;
+    font-size: 10px !important;
+    gap: 3px !important;
   }
 
   .nav-icon-btn {

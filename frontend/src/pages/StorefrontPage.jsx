@@ -590,18 +590,17 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           </nav>
 
           <div className="nav-actions">
-            {/* Language Switcher (KM / EN) with responsive mobile toggle */}
+            {/* Language Switcher with Dual EN and ខ្មែរ Capsule (All Phone & Desktop) */}
             <div className="nav-lang-switcher">
-              {/* Desktop Dual Buttons */}
-              <div className="nav-lang-desktop">
+              <div className="nav-lang-dual-pill" role="group" aria-label="Select Language">
                 <button
                   type="button"
                   className={`lang-pill-btn ${lang === 'km' ? 'active' : ''}`}
                   onClick={() => handleLangChange('km')}
-                  title="ប្ដូរទៅភាសាខ្មែរ (Khmer)"
+                  title="ប្ដូរទៅភាសាខ្មែរ"
                 >
                   <CambodiaFlagIcon size={14} />
-                  <span>ភាសាខ្មែរ</span>
+                  <span>ខ្មែរ</span>
                 </button>
                 <button
                   type="button"
@@ -610,30 +609,9 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                   title="Switch to English"
                 >
                   <UkFlagIcon size={14} />
-                  <span>English</span>
+                  <span>EN</span>
                 </button>
               </div>
-
-              {/* Mobile Single Compact Toggle Pill - Photo 2 Style */}
-              <button
-                type="button"
-                className="nav-lang-mobile"
-                onClick={() => handleLangChange(lang === 'km' ? 'en' : 'km')}
-                title={lang === 'km' ? 'Switch to English' : 'ប្ដូរទៅភាសាខ្មែរ'}
-                aria-label="Toggle Language"
-              >
-                {lang === 'km' ? (
-                  <>
-                    <CambodiaFlagIcon size={15} />
-                    <span>ខ្មែរ</span>
-                  </>
-                ) : (
-                  <>
-                    <UkFlagIcon size={15} />
-                    <span>EN</span>
-                  </>
-                )}
-              </button>
             </div>
 
             <button type="button" className="nav-icon-btn" onClick={() => setSearchOpen(true)} title={t.nav.searchTitle} aria-label="Search">

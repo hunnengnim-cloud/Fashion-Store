@@ -591,50 +591,27 @@ export default function AuthPage({ onNavigate }) {
           </div>
 
           <div className="auth-pane-actions">
-            {/* Desktop Dual Switcher (> 1024px) */}
-            <div className="auth-lang-desktop auth-lang-switch" role="group" aria-label="Select Language">
+            {/* Language Switcher with Dual EN and ខ្មែរ Capsule (All Phone & Desktop) */}
+            <div className="nav-lang-dual-pill" role="group" aria-label="Select Language">
               <button
                 type="button"
-                className={`auth-lang-btn ${lang === 'km' ? 'is-active' : ''}`}
+                className={`lang-pill-btn ${lang === 'km' ? 'active' : ''}`}
                 onClick={() => handleLangChange('km')}
                 title="ប្ដូរទៅភាសាខ្មែរ"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <CambodiaFlagIcon size={15} />
-                <span>{t.langBtnKm}</span>
+                <CambodiaFlagIcon size={14} />
+                <span>ខ្មែរ</span>
               </button>
               <button
                 type="button"
-                className={`auth-lang-btn ${lang === 'en' ? 'is-active' : ''}`}
+                className={`lang-pill-btn ${lang === 'en' ? 'active' : ''}`}
                 onClick={() => handleLangChange('en')}
                 title="Switch to English"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <UkFlagIcon size={15} />
-                <span>{t.langBtnEn}</span>
+                <UkFlagIcon size={14} />
+                <span>EN</span>
               </button>
             </div>
-
-            {/* Mobile Single Compact Pill (<= 1024px, Photo 2 Style) */}
-            <button
-              type="button"
-              className="auth-lang-mobile"
-              onClick={() => handleLangChange(lang === 'km' ? 'en' : 'km')}
-              title={lang === 'km' ? 'Switch to English' : 'ប្ដូរទៅភាសាខ្មែរ'}
-              aria-label="Toggle Language"
-            >
-              {lang === 'km' ? (
-                <>
-                  <CambodiaFlagIcon size={15} />
-                  <span>ខ្មែរ</span>
-                </>
-              ) : (
-                <>
-                  <UkFlagIcon size={15} />
-                  <span>EN</span>
-                </>
-              )}
-            </button>
 
             <button
               type="button"
