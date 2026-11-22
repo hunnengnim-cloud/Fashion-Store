@@ -649,14 +649,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                     <img
                       src={user.avatar || user.avatar_url}
                       alt={user.name}
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        marginRight: 6,
-                        border: '1.5px solid var(--accent)',
-                      }}
+                      className="nav-user-img"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (

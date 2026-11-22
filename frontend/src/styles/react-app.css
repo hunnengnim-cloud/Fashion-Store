@@ -4539,6 +4539,17 @@ body {
   box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2);
 }
 
+.nav-user-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 6px;
+  border: 1.5px solid var(--accent, #c5a059);
+  display: block;
+  flex-shrink: 0;
+}
+
 .nav-user-avatar-dot {
   width: 28px;
   height: 28px;
@@ -6298,6 +6309,59 @@ body {
     height: 15px !important;
   }
 
+  /* Compact User Profile Pill for Mobile: Clean Circular Avatar */
+  .nav-user-pill-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    border: 1.5px solid var(--accent, #c5a059) !important;
+    background: var(--card-bg, #ffffff) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .nav-user-img {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    margin: 0 !important;
+    margin-right: 0 !important;
+    border: none !important;
+    display: block !important;
+  }
+
+  .nav-user-avatar-dot {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 50% !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .nav-user-name,
+  .nav-user-chevron {
+    display: none !important;
+  }
+
+  .user-dropdown-menu,
+  .user-dropdown {
+    right: 4px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
   /* Full-bleed, edge-to-edge Hero section on Mobile */
   .hero {
     width: 100% !important;
@@ -6527,6 +6591,19 @@ body {
     padding: 4px 8px !important;
     font-size: 11px !important;
     height: 30px !important;
+  }
+
+  .nav-user-pill-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+  }
+
+  .nav-user-img,
+  .nav-user-avatar-dot {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
   }
 }
 
