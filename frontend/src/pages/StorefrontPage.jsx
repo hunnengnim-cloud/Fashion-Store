@@ -1644,13 +1644,13 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                     sale: '🔥',
                   };
                   const subLabels = {
-                    all: lang === 'km' ? 'All Products' : 'ទំនិញទាំងអស់',
-                    men: lang === 'km' ? "Men's Collection" : 'ការប្រមូលផ្ដុំបុរស',
-                    women: lang === 'km' ? "Women's Collection" : 'ការប្រមូលផ្ដុំនារី',
-                    kids: lang === 'km' ? 'Kids & Teens' : 'កុមារ និងយុវវ័យ',
-                    shoes: lang === 'km' ? 'Footwear & Boots' : 'ស្បែកជើង & ស្បែកក',
-                    accessories: lang === 'km' ? 'Bags & Jewelry' : 'កាបូប & គ្រឿងអលង្ការ',
-                    sale: lang === 'km' ? 'Special Discount Deals' : 'ការបញ្ចុះតម្លៃពិសេស',
+                    all: lang === 'km' ? 'ម៉ូដទាន់សម័យ និងទំនិញមកដល់ថ្មីៗ' : 'Curated Wardrobe & New Arrivals',
+                    men: lang === 'km' ? 'អាវ ខោ និងឈុតសម្លៀកបំពាក់បុរស' : 'Shirts, Chinos, Suits & Essentials',
+                    women: lang === 'km' ? 'រ៉ូប អាវ និងម៉ូដទាន់សម័យនារី' : 'Dresses, Silk Tops & Resortwear',
+                    kids: lang === 'km' ? 'សម្លៀកបំពាក់កុមារ និងយុវវ័យ' : 'Playful Everyday Comfort & Style',
+                    shoes: lang === 'km' ? 'ស្បែកជើងប៉ាត់ និងស្បែកជើងស្បែក' : 'Sneakers, Loafers & Leather Boots',
+                    accessories: lang === 'km' ? 'កាបូប ខ្សែក្រវាត់ និងគ្រឿងអលង្ការ' : 'Handbags, Belts & Everyday Jewelry',
+                    sale: lang === 'km' ? 'ការបញ្ចុះតម្លៃពិសេសរហូតដល់ ៥០%' : 'Limited Time Deals up to 50% Off',
                   };
                   const isActive = activeCategory === c.key;
 
@@ -1698,7 +1698,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                 <div className="mobile-drawer-perk-card">
                   <span className="perk-emoji">💵</span>
                   <div>
-                    <strong>{lang === 'km' ? 'ទូទាត់ពេលទទួល (COD)' : 'Cash on Delivery'}</strong>
+                    <strong>{lang === 'km' ? 'ទូទាត់ពេលទទួលទំនិញ' : 'Cash on Delivery'}</strong>
                     <p>{lang === 'km' ? 'ពិនិត្យមើលទំនិញសិនទើបប្រគល់ប្រាក់' : 'Inspect parcel before paying cash'}</p>
                   </div>
                 </div>
@@ -1706,7 +1706,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
             </div>
 
             <div className="mobile-drawer-footer">
-              <span>© {new Date().getFullYear()} Fashion Store · Cambodia</span>
+              <span>© {new Date().getFullYear()} {lang === 'km' ? 'ហាងម៉ូដ Fashion Store · រាជធានីភ្នំពេញ' : 'Fashion Store · Phnom Penh, Cambodia'}</span>
             </div>
           </div>
         </div>
