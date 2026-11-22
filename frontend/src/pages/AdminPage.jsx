@@ -771,7 +771,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
       {/* Main Content */}
       <main className="react-admin-main">
         <header className="react-admin-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="admin-topbar-left">
             {/* Mobile Menu Icon Button */}
             <button
               type="button"
@@ -783,8 +783,8 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
               <MenuIcon size={18} />
             </button>
 
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+            <div className="admin-topbar-heading">
+              <div className="admin-topbar-breadcrumb">
                 <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--accent)' }}>
                   {t.topbar.console}
                 </span>
@@ -793,46 +793,19 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                   {sidebarTabs.find((x) => x.id === activeTab)?.label}
                 </span>
               </div>
-              <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800 }}>
+              <h1 className="admin-topbar-title">
                 {sidebarTabs.find((x) => x.id === activeTab)?.label}
               </h1>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="admin-topbar-right">
             {/* 1. Language Switcher (KM / EN) with Crisp Vector Flags */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: 38,
-                background: 'var(--card-bg, #ffffff)',
-                border: '1.5px solid var(--border)',
-                borderRadius: 999,
-                padding: '3px 4px',
-                gap: 3,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              }}
-            >
+            <div className="admin-topbar-lang">
               <button
                 type="button"
+                className={`admin-lang-btn ${lang === 'km' ? 'is-active' : ''}`}
                 onClick={() => handleLangChange('km')}
-                style={{
-                  border: 'none',
-                  height: 30,
-                  background: lang === 'km' ? 'linear-gradient(135deg, #d4af37, #b8860b)' : 'transparent',
-                  color: lang === 'km' ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: lang === 'km' ? 700 : 600,
-                  fontSize: 12,
-                  padding: '0 11px 0 8px',
-                  borderRadius: 999,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  boxShadow: lang === 'km' ? '0 2px 8px rgba(212, 175, 55, 0.4)' : 'none',
-                  transition: 'all 0.2s ease',
-                }}
                 title="ប្ដូរទៅភាសាខ្មែរ (Khmer)"
               >
                 <CambodiaFlagIcon size={16} />
@@ -840,23 +813,8 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
               </button>
               <button
                 type="button"
+                className={`admin-lang-btn ${lang === 'en' ? 'is-active' : ''}`}
                 onClick={() => handleLangChange('en')}
-                style={{
-                  border: 'none',
-                  height: 30,
-                  background: lang === 'en' ? 'linear-gradient(135deg, #d4af37, #b8860b)' : 'transparent',
-                  color: lang === 'en' ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: lang === 'en' ? 700 : 600,
-                  fontSize: 12,
-                  padding: '0 12px 0 8px',
-                  borderRadius: 999,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  boxShadow: lang === 'en' ? '0 2px 8px rgba(212, 175, 55, 0.4)' : 'none',
-                  transition: 'all 0.2s ease',
-                }}
                 title="Switch to English"
               >
                 <UkFlagIcon size={16} />
@@ -867,79 +825,31 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
             {/* 2. Admin Profile Pill */}
             <button
               type="button"
+              className={`admin-topbar-profile-btn ${activeTab === 'settings' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('settings')}
               title={t.topbar.profileHint}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: 38,
-                gap: 8,
-                padding: '0 14px 0 5px',
-                borderRadius: 999,
-                background: activeTab === 'settings' ? 'rgba(212, 175, 55, 0.15)' : 'var(--card-bg, #ffffff)',
-                border: activeTab === 'settings' ? '1.5px solid #d4af37' : '1.5px solid var(--border)',
-                cursor: 'pointer',
-                color: 'inherit',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                transition: 'all 0.2s ease',
-              }}
             >
               {avatarPreview || user?.avatar || user?.avatar_url ? (
                 <img
                   src={avatarPreview || user?.avatar || user?.avatar_url}
                   alt={user?.name || 'Admin'}
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '1.5px solid #d4af37',
-                  }}
+                  className="admin-profile-avatar"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
-                <span
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #d4af37, #aa7c11)',
-                    color: '#ffffff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 12,
-                    fontWeight: 800,
-                    boxShadow: '0 2px 6px rgba(212, 175, 55, 0.3)',
-                  }}
-                >
+                <span className="admin-profile-crown">
                   👑
                 </span>
               )}
-              <span style={{ fontSize: 12.5, fontWeight: 700 }}>{user?.name || 'Admin'}</span>
-              <span style={{ fontSize: 11, color: '#d4af37' }}>⚙️</span>
+              <span className="admin-profile-name">{user?.name || 'Admin'}</span>
+              <span className="admin-profile-gear">⚙️</span>
             </button>
 
             {/* 3. Luxury Theme Toggle Icon Button (Icon Only, No Text) */}
             <button
               type="button"
+              className="admin-topbar-theme-btn"
               onClick={onToggleTheme}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                background: 'var(--card-bg, #ffffff)',
-                border: '1.5px solid var(--border)',
-                cursor: 'pointer',
-                color: 'var(--text-primary)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-                padding: 0,
-              }}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
@@ -949,29 +859,16 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
             {/* 4. Luxury Add New Product Pill */}
             <button
               type="button"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: 38,
-                gap: 6,
-                padding: '0 18px',
-                borderRadius: 999,
-                background: 'linear-gradient(135deg, #d4af37, #b8860b)',
-                border: 'none',
-                color: '#ffffff',
-                boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)',
-                cursor: 'pointer',
-                fontSize: 12.5,
-                fontWeight: 700,
-                transition: 'all 0.2s ease',
-              }}
+              className="admin-topbar-add-btn"
               onClick={() => {
                 setEditingProduct(null);
                 setModalOpen(true);
               }}
+              title={t.topbar.addNewProduct}
+              aria-label={t.topbar.addNewProduct}
             >
-              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-              <span>{t.topbar.addNewProduct}</span>
+              <span className="admin-add-icon">+</span>
+              <span className="admin-add-label">{t.topbar.addNewProduct}</span>
             </button>
           </div>
         </header>
@@ -992,7 +889,6 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                 role="tab"
               >
                 <span className="admin-tab-emoji">{tab.icon}</span>
-                {isActive && <span className="admin-tab-glow-dot" />}
               </button>
             );
           })}

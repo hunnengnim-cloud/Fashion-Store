@@ -2361,6 +2361,159 @@ body {
 [data-theme="dark"] .react-admin-topbar {
   background: rgba(18, 20, 28, 0.88);
 }
+
+/* Admin Topbar Components */
+.admin-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-topbar-heading {
+  display: flex;
+  flex-direction: column;
+}
+.admin-topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.admin-topbar-title {
+  font-size: 20px;
+  margin: 0;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.admin-topbar-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.admin-topbar-lang {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  background: var(--card-bg, #ffffff);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 4px;
+  gap: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.admin-lang-btn {
+  border: none;
+  height: 30px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 0 11px 0 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.admin-lang-btn.is-active {
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+}
+.admin-topbar-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  gap: 8px;
+  padding: 0 14px 0 5px;
+  border-radius: 999px;
+  background: var(--card-bg, #ffffff);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  color: inherit;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+.admin-topbar-profile-btn.is-active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+}
+.admin-profile-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #d4af37;
+}
+.admin-profile-crown {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #aa7c11);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+}
+.admin-profile-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.admin-profile-gear {
+  font-size: 11px;
+  color: #d4af37;
+}
+.admin-topbar-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--card-bg, #ffffff);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+.admin-topbar-theme-btn:hover {
+  border-color: #d4af37;
+  color: #d4af37;
+}
+.admin-topbar-add-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  gap: 6px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.admin-topbar-add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45);
+}
+.admin-add-icon {
+  font-size: 16px;
+  line-height: 1;
+}
 .react-admin-body {
   padding: 24px 26px;
 }
@@ -3623,14 +3776,141 @@ body {
     min-width: 0 !important;
   }
 
-  /* Horizontal Icon Menu Strip on mobile */
+  /* ── Mobile Admin Topbar (Single sleek row, no clumsy wrapping) ── */
+  .react-admin-topbar {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    min-height: 52px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--border) !important;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  }
+  [data-theme="dark"] .react-admin-topbar {
+    background: rgba(18, 20, 28, 0.95) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .admin-topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+
+  .admin-topbar-breadcrumb {
+    display: none !important;
+  }
+
+  .admin-topbar-title {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 130px !important;
+  }
+
+  .admin-topbar-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Compact language switcher */
+  .admin-topbar-lang {
+    height: 32px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+    border-radius: 999px !important;
+  }
+  .admin-lang-btn {
+    height: 26px !important;
+    padding: 0 7px 0 5px !important;
+    font-size: 11px !important;
+    gap: 3px !important;
+  }
+
+  /* Admin profile button: Icon-only luxury avatar badge on mobile */
+  .admin-topbar-profile-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+    border: 1.5px solid rgba(212, 175, 55, 0.45) !important;
+    background: var(--card-bg, #ffffff) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  }
+  .admin-profile-name,
+  .admin-profile-gear {
+    display: none !important;
+  }
+  .admin-profile-avatar,
+  .admin-profile-crown {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+    margin: 0 !important;
+  }
+
+  /* Theme toggle circle */
+  .admin-topbar-theme-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+  }
+
+  /* Add product: Icon-only gold circular FAB button on mobile */
+  .admin-topbar-add-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #d4af37, #b8860b) !important;
+    box-shadow: 0 3px 10px rgba(212, 175, 55, 0.4) !important;
+  }
+  .admin-add-label {
+    display: none !important;
+  }
+  .admin-add-icon {
+    font-size: 20px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Compact body padding on mobile */
+  .react-admin-body {
+    padding: 14px 12px !important;
+  }
+
+  /* ── Sleek Glassmorphic Floating Mobile Icon Dock ── */
   .admin-mobile-icon-strip {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    padding: 10px 14px !important;
-    background: var(--card-bg, #ffffff) !important;
-    border-bottom: 1px solid var(--border) !important;
+    padding: 8px 12px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.18) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03) !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: none !important;
@@ -3646,13 +3926,15 @@ body {
     justify-content: center !important;
     width: 44px !important;
     height: 44px !important;
-    border-radius: 14px !important;
-    border: 1.5px solid var(--border) !important;
-    background: var(--bg) !important;
+    min-width: 44px !important;
+    border-radius: 13px !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    background: var(--card-bg, #ffffff) !important;
     color: var(--text-primary) !important;
     font-size: 20px !important;
     cursor: pointer !important;
     flex-shrink: 0 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     -webkit-tap-highlight-color: transparent !important;
   }
@@ -3662,39 +3944,46 @@ body {
   }
 
   .admin-mobile-icon-btn.is-active {
-    background: linear-gradient(135deg, #e5b95a 0%, #c59837 50%, #996e19 100%) !important;
+    background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
     border-color: #d4af37 !important;
     box-shadow: 0 4px 14px rgba(212, 175, 55, 0.42) !important;
     transform: translateY(-1px) scale(1.05) !important;
-  }
-
-  .admin-tab-glow-dot {
-    position: absolute !important;
-    bottom: 3px !important;
-    width: 5px !important;
-    height: 5px !important;
-    border-radius: 50% !important;
-    background: #0b0d13 !important;
+    color: #ffffff !important;
   }
 
   [data-theme="dark"] .admin-mobile-icon-strip {
-    background: #111827 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(17, 24, 39, 0.92) !important;
+    border-bottom-color: rgba(212, 175, 55, 0.16) !important;
   }
   [data-theme="dark"] .admin-mobile-icon-btn {
     background: #1a2234 !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
   }
   [data-theme="dark"] .admin-mobile-icon-btn.is-active {
     background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
     border-color: #d4af37 !important;
-  }
-  [data-theme="dark"] .admin-tab-glow-dot {
-    background: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.45) !important;
   }
 
   .grid-choice-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .admin-topbar-title {
+    max-width: 95px !important;
+    font-size: 13.5px !important;
+  }
+  .admin-topbar-right {
+    gap: 4px !important;
+  }
+  .admin-lang-btn {
+    padding: 0 5px 0 4px !important;
+    font-size: 10.5px !important;
+  }
+  .react-admin-topbar {
+    padding: 8px 8px !important;
   }
 }
 
