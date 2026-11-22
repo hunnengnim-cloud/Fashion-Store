@@ -22,6 +22,79 @@ function resolveRoute(pathname) {
   return { view: 'store', category: 'all' };
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+            background: 'var(--bg-main, #fcfaf6)',
+            color: 'var(--text-primary, #1e1e1e)',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--bg-card, #ffffff)',
+              borderRadius: 24,
+              padding: '36px 24px',
+              maxWidth: 420,
+              width: '100%',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
+              border: '1px solid var(--border, #eee)',
+            }}
+          >
+            <div style={{ fontSize: 44, marginBottom: 12 }}>✨</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800 }}>Fashion Store</h3>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: 'var(--text-muted, #666)', lineHeight: 1.5 }}>
+              សូមផ្ទុកទំព័រឡើងវិញ ដើម្បីបន្តការទិញទំនិញ។
+              <br />
+              Please reload the page to continue.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.reload();
+              }}
+              className="btn btn-primary"
+              style={{
+                padding: '12px 28px',
+                borderRadius: 999,
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Refresh Page (ផ្ទុកទំព័រឡើងវិញ)
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [pathname, setPathname] = useState(() => window.location.pathname);
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light');
@@ -68,7 +141,7 @@ export default function App() {
   const route = resolveRoute(pathname);
 
   return (
-    <>
+    <ErrorBoundary>
       <FallingStarsSnow theme={theme} />
       {route.view === 'admin' && <AdminPage theme={theme} onToggleTheme={toggleTheme} onNavigate={navigate} />}
       {route.view === 'login' && <AuthPage onNavigate={navigate} />}
@@ -96,7 +169,7 @@ export default function App() {
           </div>
         ))}
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
 

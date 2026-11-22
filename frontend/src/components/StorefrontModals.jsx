@@ -763,7 +763,7 @@ export function WishlistDrawer({ open, items, onClose, lang: propLang }) {
 }
 
 /* ── 5. Checkout Modal (Bakong KHQR + COD + Orders Sync) ── */
-export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: customLang }) {
+export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang: customLang }) {
   const lang = customLang || getLang();
   const t = STOREFRONT_T[lang]?.checkoutModal || STOREFRONT_T.km.checkoutModal;
   const user = getUser();
@@ -775,6 +775,12 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
   const [loading, setLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [showMap, setShowMap] = useState(true);
+
+  const safeItems = Array.isArray(items) ? items : [];
+  const subtotal = safeItems.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * (i.qty || 1), 0);
+  const shipping = subtotal >= 50 || subtotal === 0 ? 0 : 2.5;
+  const total = subtotal + shipping;
+  const khrTotal = Math.round(total * 4100);
 
   const handleGetGpsLocation = () => {
     if (!navigator.geolocation) {
@@ -807,6 +813,7 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
     );
   };
 
+  // Sync user details on open
   useEffect(() => {
     if (open) {
       const current = getUser();
@@ -815,78 +822,6 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
       setQrData(null);
     }
   }, [open]);
-
-  if (!open) return null;
-
-  const subtotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * (i.qty || 1), 0);
-  const shipping = subtotal >= 50 || subtotal === 0 ? 0 : 2.5;
-  const total = subtotal + shipping;
-  const khrTotal = Math.round(total * 4100);
-
-  const finalizeOrder = async (paymentLabel, method = 'cod') => {
-    const orderNum = `ORD-${Date.now().toString().slice(-8)}`;
-    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const isCod = method === 'cod' || paymentLabel.toLowerCase().includes('cash');
-
-    const newOrder = {
-      num: orderNum,
-      date: nowStr,
-      customer: {
-        name: name || user?.name || 'Customer',
-        email: user?.email || 'customer@fashionstore.com',
-        phone: phone || '012 345 678',
-        address,
-        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
-        avatar: user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
-      },
-      products: items.map((i) => ({
-        name: i.name,
-        size: i.size || 'M',
-        qty: i.qty || 1,
-        price: Number(i.sale_price || i.price || 0),
-        image: i.image,
-      })),
-      total,
-      payment: isCod ? 'Cash on Delivery (COD)' : paymentLabel,
-      payment_method: isCod ? 'cod' : 'khqr',
-      payment_status: isCod ? 'unpaid' : 'paid',
-      status: 'pending', // Stage 1: Order Placed / Processing
-      courier: 'J&T Express 🚚',
-      tracking_number: `JT-${Math.floor(100000 + Math.random() * 900000)}KH`,
-      created_at: new Date().toISOString(),
-    };
-
-    const existingOrders = getOrders();
-    saveOrders([newOrder, ...existingOrders]);
-
-    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    await api.post(
-      '/telegram/send-receipt',
-      {
-        id: orderNum,
-        date: nowStr,
-        name: newOrder.customer.name,
-        phone: newOrder.customer.phone,
-        address: `${address}\n📍 Google Maps: ${mapsLink}`,
-        items: newOrder.products.map((p) => `${p.name} (${p.size}) x${p.qty}`),
-        total,
-        khr_total: khrTotal,
-        payment: newOrder.payment,
-        status: isCod ? 'pending (COD Unpaid - មិនទាន់បង់ប្រាក់)' : 'paid (KHQR)',
-      },
-      false
-    );
-
-    saveCart([]);
-    notify(
-      isCod
-        ? (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ត្រូវបានទទួលយកភ្លាមៗ! (COD Order Accepted)` : `🎉 Order ${orderNum} placed successfully! (COD Order Accepted)`)
-        : (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ទទួលបានជោគជ័យ!` : `🎉 Order ${orderNum} placed successfully!`),
-      'success',
-      4500
-    );
-    onClose();
-  };
 
   // Client-side EMVCo NBC KHQR generator fallback
   const generateKhqrClient = (amt, curr = 'USD', billNo = null) => {
@@ -950,9 +885,74 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
     };
   };
 
-  // Auto-poll Bakong open API every 3.5s to detect live payments
+  const finalizeOrder = async (paymentLabel, method = 'cod') => {
+    const orderNum = `ORD-${Date.now().toString().slice(-8)}`;
+    const nowStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const isCod = method === 'cod' || paymentLabel.toLowerCase().includes('cash');
+
+    const newOrder = {
+      num: orderNum,
+      date: nowStr,
+      customer: {
+        name: name || user?.name || 'Customer',
+        email: user?.email || 'customer@fashionstore.com',
+        phone: phone || '012 345 678',
+        address,
+        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+        avatar: user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
+      },
+      products: safeItems.map((i) => ({
+        name: i.name,
+        size: i.size || 'M',
+        qty: i.qty || 1,
+        price: Number(i.sale_price || i.price || 0),
+        image: i.image,
+      })),
+      total,
+      payment: isCod ? 'Cash on Delivery (COD)' : paymentLabel,
+      payment_method: isCod ? 'cod' : 'khqr',
+      payment_status: isCod ? 'unpaid' : 'paid',
+      status: 'pending', // Stage 1: Order Placed / Processing
+      courier: 'J&T Express 🚚',
+      tracking_number: `JT-${Math.floor(100000 + Math.random() * 900000)}KH`,
+      created_at: new Date().toISOString(),
+    };
+
+    const existingOrders = getOrders();
+    saveOrders([newOrder, ...existingOrders]);
+
+    const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    await api.post(
+      '/telegram/send-receipt',
+      {
+        id: orderNum,
+        date: nowStr,
+        name: newOrder.customer.name,
+        phone: newOrder.customer.phone,
+        address: `${address}\n📍 Google Maps: ${mapsLink}`,
+        items: newOrder.products.map((p) => `${p.name} (${p.size}) x${p.qty}`),
+        total,
+        khr_total: khrTotal,
+        payment: newOrder.payment,
+        status: isCod ? 'pending (COD Unpaid - មិនទាន់បង់ប្រាក់)' : 'paid (KHQR)',
+      },
+      false
+    );
+
+    saveCart([]);
+    notify(
+      isCod
+        ? (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ត្រូវបានទទួលយកភ្លាមៗ! (COD Order Accepted)` : `🎉 Order ${orderNum} placed successfully! (COD Order Accepted)`)
+        : (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ទទួលបានជោគជ័យ!` : `🎉 Order ${orderNum} placed successfully!`),
+      'success',
+      4500
+    );
+    onClose();
+  };
+
+  // Auto-poll Bakong open API every 3.5s to detect live payments (Unconditionally declared hook)
   useEffect(() => {
-    if (!qrData || !qrData.md5 || qrData.md5.startsWith('DEMO-')) return;
+    if (!open || !qrData || !qrData.md5 || qrData.md5.startsWith('DEMO-')) return;
     const interval = setInterval(async () => {
       try {
         const checkRes = await api.post('/payment/bakong/check', { md5: qrData.md5 }, false);
@@ -967,7 +967,10 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [qrData]);
+  }, [open, qrData]);
+
+  // Safe early return ONLY AFTER all hooks have executed
+  if (!open) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
