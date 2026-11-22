@@ -558,7 +558,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
   ) : null;
 
   return (
-    <div>
+    <div className="storefront-page-shell">
       {/* Header */}
       <header className="navbar">
         <div className="container-lg navbar-inner">
@@ -590,68 +590,49 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           </nav>
 
           <div className="nav-actions">
-            {/* Language Switcher (KM / EN) */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                height: 36,
-                background: 'var(--card-bg, #ffffff)',
-                border: '1.5px solid var(--border)',
-                borderRadius: 999,
-                padding: '2px 3px',
-                gap: 2,
-                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                marginRight: 4,
-              }}
-            >
+            {/* Language Switcher (KM / EN) with responsive mobile toggle */}
+            <div className="nav-lang-switcher">
+              {/* Desktop Dual Buttons */}
+              <div className="nav-lang-desktop">
+                <button
+                  type="button"
+                  className={`lang-pill-btn ${lang === 'km' ? 'active' : ''}`}
+                  onClick={() => handleLangChange('km')}
+                  title="ប្ដូរទៅភាសាខ្មែរ (Khmer)"
+                >
+                  <CambodiaFlagIcon size={14} />
+                  <span>ភាសាខ្មែរ</span>
+                </button>
+                <button
+                  type="button"
+                  className={`lang-pill-btn ${lang === 'en' ? 'active' : ''}`}
+                  onClick={() => handleLangChange('en')}
+                  title="Switch to English"
+                >
+                  <UkFlagIcon size={14} />
+                  <span>English</span>
+                </button>
+              </div>
+
+              {/* Mobile Single Compact Toggle Pill */}
               <button
                 type="button"
-                onClick={() => handleLangChange('km')}
-                style={{
-                  border: 'none',
-                  height: 28,
-                  background: lang === 'km' ? 'linear-gradient(135deg, #d4af37, #b8860b)' : 'transparent',
-                  color: lang === 'km' ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: lang === 'km' ? 700 : 600,
-                  fontSize: 11.5,
-                  padding: '0 9px 0 6px',
-                  borderRadius: 999,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  boxShadow: lang === 'km' ? '0 2px 6px rgba(212, 175, 55, 0.4)' : 'none',
-                  transition: 'all 0.2s ease',
-                }}
-                title="ប្ដូរទៅភាសាខ្មែរ (Khmer)"
+                className="nav-lang-mobile"
+                onClick={() => handleLangChange(lang === 'km' ? 'en' : 'km')}
+                title={lang === 'km' ? 'Switch to English' : 'ប្ដូរទៅភាសាខ្មែរ'}
+                aria-label="Toggle Language"
               >
-                <CambodiaFlagIcon size={15} />
-                <span>ភាសាខ្មែរ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleLangChange('en')}
-                style={{
-                  border: 'none',
-                  height: 28,
-                  background: lang === 'en' ? 'linear-gradient(135deg, #d4af37, #b8860b)' : 'transparent',
-                  color: lang === 'en' ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: lang === 'en' ? 700 : 600,
-                  fontSize: 11.5,
-                  padding: '0 11px 0 8px',
-                  borderRadius: 999,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  boxShadow: lang === 'en' ? '0 2px 6px rgba(212, 175, 55, 0.4)' : 'none',
-                  transition: 'all 0.2s ease',
-                }}
-                title="Switch to English"
-              >
-                <UkFlagIcon size={15} />
-                <span>English</span>
+                {lang === 'km' ? (
+                  <>
+                    <CambodiaFlagIcon size={14} />
+                    <span>ខ្មែរ</span>
+                  </>
+                ) : (
+                  <>
+                    <UkFlagIcon size={14} />
+                    <span>EN</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -816,8 +797,9 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                 )}
               </div>
             ) : (
-              <button type="button" className="btn btn-primary btn-sm" onClick={() => onNavigate('/login')}>
-                {t.nav.signInBtn}
+              <button type="button" className="btn btn-primary btn-sm nav-signin-btn" onClick={() => onNavigate('/login')}>
+                <span className="nav-signin-desktop">{t.nav.signInBtn}</span>
+                <span className="nav-signin-mobile">{lang === 'km' ? 'ចូល' : 'Sign In'}</span>
               </button>
             )}
           </div>
