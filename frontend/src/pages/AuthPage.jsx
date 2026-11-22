@@ -626,7 +626,7 @@ export default function AuthPage({ onNavigate }) {
               {lang === 'km' ? (
                 <>
                   <CambodiaFlagIcon size={15} />
-                  <span>KM</span>
+                  <span>ខ្មែរ</span>
                 </>
               ) : (
                 <>

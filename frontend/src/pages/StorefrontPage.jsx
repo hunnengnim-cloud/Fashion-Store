@@ -625,7 +625,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                 {lang === 'km' ? (
                   <>
                     <CambodiaFlagIcon size={15} />
-                    <span>KM</span>
+                    <span>ខ្មែរ</span>
                   </>
                 ) : (
                   <>
