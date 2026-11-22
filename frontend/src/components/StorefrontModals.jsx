@@ -888,6 +888,87 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
     onClose();
   };
 
+  // Client-side EMVCo NBC KHQR generator fallback
+  const generateKhqrClient = (amt, curr = 'USD', billNo = null) => {
+    const accountId = 'huonneng_nim@bkrt';
+    const merchantName = 'Huonneng Nim';
+    const formattedAmount = Number(amt).toFixed(2);
+    const billNumber = billNo || `ORD-${Date.now().toString().slice(-8)}`;
+
+    const formatTlv = (tag, val) => {
+      const len = String(val.length).padStart(2, '0');
+      return `${tag}${len}${val}`;
+    };
+
+    const sub00 = formatTlv('00', accountId);
+    const tag29 = formatTlv('29', sub00);
+    const subBill = formatTlv('01', billNumber.slice(0, 25));
+    const subStore = formatTlv('03', 'Fashion Store KH');
+    const tag62 = formatTlv('62', subBill + subStore);
+
+    const nowMs = String(Date.now());
+    const expMs = String(Date.now() + 30 * 60 * 1000);
+    const tag99 = formatTlv('99', formatTlv('00', nowMs) + formatTlv('01', expMs));
+
+    const payload =
+      formatTlv('00', '01') +
+      formatTlv('01', '12') +
+      tag29 +
+      formatTlv('52', '5999') +
+      formatTlv('53', '840') +
+      formatTlv('54', formattedAmount) +
+      formatTlv('58', 'KH') +
+      formatTlv('59', merchantName.slice(0, 25)) +
+      formatTlv('60', 'Phnom Penh') +
+      tag62 +
+      tag99 +
+      '6304';
+
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+      crc ^= (payload.charCodeAt(i) << 8);
+      for (let j = 0; j < 8; j++) {
+        if (crc & 0x8000) {
+          crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+        } else {
+          crc = (crc << 1) & 0xFFFF;
+        }
+      }
+    }
+    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+    const fullQr = payload + crcHex;
+
+    return {
+      account_id: accountId,
+      merchant_name: merchantName,
+      amount: Number(formattedAmount),
+      currency: curr,
+      qr_string: fullQr,
+      qr_image: `https://api.qrserver.com/v1/create-qr-code/?size=340x340&margin=8&ecc=M&data=${encodeURIComponent(fullQr)}`,
+      md5: `KHQR-${Date.now()}`,
+      bill_number: billNumber,
+    };
+  };
+
+  // Auto-poll Bakong open API every 3.5s to detect live payments
+  useEffect(() => {
+    if (!qrData || !qrData.md5 || qrData.md5.startsWith('DEMO-')) return;
+    const interval = setInterval(async () => {
+      try {
+        const checkRes = await api.post('/payment/bakong/check', { md5: qrData.md5 }, false);
+        if (checkRes.ok && checkRes.data?.data?.paid) {
+          clearInterval(interval);
+          notify(lang === 'km' ? '🎉 ការទូទាត់ប្រាក់តាម Bakong KHQR បានជោគជ័យ!' : '🎉 Bakong KHQR Payment Received!', 'success', 4000);
+          finalizeOrder('Bakong KHQR Paid', 'khqr');
+        }
+      } catch {
+        // Continue silently
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [qrData]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user || isAdminUser(user)) {
@@ -908,14 +989,36 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
     }
 
     setLoading(true);
-    const res = await api.post('/payment/bakong/qr', { amount: Number(total.toFixed(2)), currency: 'USD' }, false);
-    setLoading(false);
-    if (res.ok && (res.data?.qr || res.data?.data?.qr)) {
-      setQrData(res.data?.data || res.data);
-    } else {
-      notify(res.data?.message || (lang === 'km' ? 'បានបង្កើត KHQR សាកល្បង — សូមបញ្ជាក់ក្រោយពេលបង់ប្រាក់រួច។' : 'Generated demo KHQR preview — confirm when paid.'), 'default', 3000);
-      setQrData({ md5: `DEMO-${Date.now()}`, qr: null });
+    let qrInfo = null;
+    try {
+      const res = await api.post('/payment/bakong/qr', { amount: Number(total.toFixed(2)), currency: 'USD' }, false);
+      if (res.ok && (res.data?.data || res.data)) {
+        const d = res.data?.data || res.data;
+        const qrString = d.qr_string || d.qr || '';
+        const qrImg = d.qr_image || d.qr_image_url || res.data?.qr_image || res.data?.qr_image_url || (qrString ? `https://api.qrserver.com/v1/create-qr-code/?size=340x340&margin=8&ecc=M&data=${encodeURIComponent(qrString)}` : null);
+        if (qrString || qrImg) {
+          qrInfo = {
+            ...d,
+            qr_string: qrString,
+            qr_image: qrImg,
+            md5: d.md5 || `KHQR-${Date.now()}`,
+            amount: d.amount || total,
+            currency: d.currency || 'USD',
+            merchant_name: d.merchant_name || 'Huonneng Nim',
+            account_id: d.account_id || 'huonneng_nim@bkrt',
+          };
+        }
+      }
+    } catch {
+      // Fallback below
     }
+
+    if (!qrInfo || !qrInfo.qr_image) {
+      qrInfo = generateKhqrClient(Number(total.toFixed(2)), 'USD');
+    }
+
+    setLoading(false);
+    setQrData(qrInfo);
   };
 
   return (
@@ -934,36 +1037,81 @@ export function CheckoutModal({ open, items, onClose, onNavigateLogin, lang: cus
         </div>
         <div className="modal-body">
           {qrData ? (
-            <div style={{ textAlign: 'center', padding: '12px 0' }}>
-              <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{t.scanBakongTitle}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#dc2626', marginBottom: 4 }}>{formatUSD(total)}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>{khrTotal.toLocaleString('en-US')} ៛</div>
-              <div
-                style={{
-                  background: '#ffffff',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: 16,
-                  padding: 18,
-                  display: 'inline-block',
-                  marginBottom: 16,
-                }}
-              >
-                {qrData.qr_image ? (
-                  <img src={qrData.qr_image} alt="KHQR" style={{ width: 200, height: 200 }} />
-                ) : (
-                  <div style={{ width: 200, height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px dashed #cbd5e1', borderRadius: 12, padding: 12 }}>
-                    <div style={{ fontSize: 32, marginBottom: 6 }}>🇰🇭</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{t.bakongReady}</div>
-                    <div style={{ fontSize: 10, color: '#64748b', wordBreak: 'break-all', marginTop: 6 }}>{String(qrData.md5 || '').slice(0, 18)}</div>
+            <div className="official-khqr-container">
+              {/* Official Red KHQR Banner */}
+              <div className="official-khqr-banner">
+                <div className="official-khqr-top-row">
+                  <div className="official-khqr-brand">
+                    <span className="official-khqr-flag">🇰🇭</span>
+                    <span className="official-khqr-title">KHQR</span>
                   </div>
-                )}
+                  <span className="official-khqr-badge">Bakong Official</span>
+                </div>
+                <div className="official-khqr-merchant">
+                  <div className="official-khqr-merchant-name">{qrData.merchant_name || 'Huonneng Nim'}</div>
+                  <div className="official-khqr-merchant-acc">{qrData.account_id || 'huonneng_nim@bkrt'}</div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setQrData(null)}>
-                  {t.backBtn}
+
+              {/* Price Display */}
+              <div className="official-khqr-price-strip">
+                <div className="official-khqr-amount-usd">{formatUSD(total)}</div>
+                <div className="official-khqr-amount-khr">{khrTotal.toLocaleString('en-US')} ៛</div>
+              </div>
+
+              {/* QR Code Frame */}
+              <div className="official-khqr-code-box">
+                <div className="official-khqr-code-inner">
+                  <img
+                    src={qrData.qr_image}
+                    alt="Bakong KHQR Payment Code"
+                    className="official-khqr-img"
+                    onError={(e) => {
+                      if (!e.currentTarget.dataset.retried) {
+                        e.currentTarget.dataset.retried = 'true';
+                        e.currentTarget.src = `https://quickchart.io/qr?size=340&text=${encodeURIComponent(qrData.qr_string || '')}`;
+                      }
+                    }}
+                  />
+                  <div className="official-khqr-center-emblem">
+                    <span style={{ fontSize: 16 }}>🇰🇭</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Status & Bank Instructions */}
+              <div className="official-khqr-status-box">
+                <div className="official-khqr-pulse">
+                  <span className="official-khqr-dot" />
+                  <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>
+                    {lang === 'km' ? 'កំពុងរង់ចាំការស្កេនទូទាត់ប្រាក់...' : 'Awaiting payment scan...'}
+                  </span>
+                </div>
+                <div className="official-khqr-bank-icons">
+                  <span>Bakong</span> · <span>ABA Mobile</span> · <span>Wing Bank</span> · <span>ACLEDA</span> · <span>Canadia</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="official-khqr-actions-row">
+                <button type="button" className="btn btn-outline btn-khqr-back" onClick={() => setQrData(null)}>
+                  ← {t.backBtn}
                 </button>
-                <button type="button" className="btn btn-primary" onClick={() => finalizeOrder('KHQR Paid')}>
-                  {t.confirmKhqrPaymentBtn}
+                <a
+                  href={qrData.qr_image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary btn-khqr-save"
+                  title="Open or Save QR image"
+                >
+                  📥 {lang === 'km' ? 'ទាញយក QR' : 'Save QR'}
+                </a>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-khqr-confirm"
+                  onClick={() => finalizeOrder('Bakong KHQR Paid', 'khqr')}
+                >
+                  ✓ {lang === 'km' ? 'ខ្ញុំបានទូទាត់ប្រាក់រួចរាល់' : 'I Have Paid'}
                 </button>
               </div>
             </div>

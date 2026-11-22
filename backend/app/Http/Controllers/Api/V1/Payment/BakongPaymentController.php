@@ -37,9 +37,16 @@ class BakongPaymentController extends Controller
             storeLabel: $storeLabel
         );
 
+        $khqrData['qr'] = $khqrData['qr_string'];
+        $khqrData['qr_image'] = $khqrData['qr_image_url'];
+
         return response()->json([
             'status' => 'success',
             'data' => $khqrData,
+            'qr' => $khqrData['qr_string'],
+            'qr_image' => $khqrData['qr_image_url'],
+            'qr_image_url' => $khqrData['qr_image_url'],
+            'md5' => $khqrData['md5'],
         ]);
     }
 

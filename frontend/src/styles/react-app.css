@@ -9121,6 +9121,250 @@ body {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   OFFICIAL BAKONG KHQR PAYMENT CARD (National Bank of Cambodia)
+══════════════════════════════════════════════════════════════ */
+.official-khqr-container {
+  text-align: center;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 4px 0 12px;
+}
+
+.official-khqr-banner {
+  background: linear-gradient(135deg, #e11b22 0%, #b30f16 100%);
+  color: #ffffff;
+  border-radius: 18px 18px 0 0;
+  padding: 14px 18px;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(225, 27, 34, 0.25);
+}
+
+.official-khqr-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.official-khqr-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.official-khqr-flag {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.official-khqr-title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.official-khqr-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.official-khqr-merchant-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.official-khqr-merchant-acc {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: monospace, sans-serif;
+}
+
+.official-khqr-price-strip {
+  background: #fff8f8;
+  padding: 10px 16px;
+  border-left: 2px solid #e11b22;
+  border-right: 2px solid #e11b22;
+  text-align: center;
+}
+
+[data-theme="dark"] .official-khqr-price-strip {
+  background: #1e1315;
+}
+
+.official-khqr-amount-usd {
+  font-size: 26px;
+  font-weight: 900;
+  color: #e11b22;
+  line-height: 1.2;
+}
+
+.official-khqr-amount-khr {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.official-khqr-code-box {
+  background: #ffffff;
+  border: 2px solid #e11b22;
+  border-top: none;
+  border-radius: 0 0 18px 18px;
+  padding: 18px 14px;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 8px 30px rgba(225, 27, 34, 0.12);
+}
+
+.official-khqr-code-inner {
+  position: relative;
+  width: 230px;
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.official-khqr-img {
+  width: 230px;
+  height: 230px;
+  display: block;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.official-khqr-center-emblem {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e11b22;
+  pointer-events: none;
+}
+
+.official-khqr-status-box {
+  margin: 14px 0 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+[data-theme="dark"] .official-khqr-status-box {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.official-khqr-pulse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.official-khqr-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: khqrPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes khqrPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #10b981; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.official-khqr-bank-icons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.official-khqr-actions-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-khqr-back {
+  border-radius: 999px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+.btn-khqr-save {
+  border-radius: 999px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.btn-khqr-confirm {
+  border-radius: 999px !important;
+  height: 40px !important;
+  padding: 0 20px !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.4) !important;
+}
+
+@media (max-width: 480px) {
+  .official-khqr-code-inner,
+  .official-khqr-img {
+    width: 200px !important;
+    height: 200px !important;
+  }
+  .official-khqr-amount-usd {
+    font-size: 22px !important;
+  }
+  .official-khqr-actions-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .official-khqr-actions-row .btn,
+  .official-khqr-actions-row .btn-khqr-save {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
 
 
 
