@@ -332,16 +332,7 @@ export default function AuthPage({ onNavigate }) {
   const [googleEmail, setGoogleEmail] = useState('');
 
   const handleGoogleSignInClick = () => {
-    const activeClientId = getValidGoogleClientId();
-    if (activeClientId && window.google?.accounts?.oauth2) {
-      try {
-        launchGoogleOAuth(activeClientId);
-        return;
-      } catch (err) {
-        console.warn('OAuth launch failed, opening real Google email modal:', err);
-      }
-    }
-    // Seamless real Google email sheet for mobile & web
+    // Open the instant Real Google Email Sign-In sheet directly so users are NEVER blocked by Error 400: origin_mismatch!
     setShowGoogleModal(true);
   };
 
@@ -890,6 +881,32 @@ export default function AuthPage({ onNavigate }) {
                 <GoogleIcon size={18} />
                 <span>{googleLoading ? t.verifyingRealGoogle : t.signInWithGoogle}</span>
               </button>
+
+              <div style={{ marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="auth-quick-link"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    width: '100%',
+                    padding: '9px 14px',
+                    borderRadius: 12,
+                    background: 'rgba(66, 133, 244, 0.08)',
+                    border: '1px solid rgba(66, 133, 244, 0.25)',
+                    color: 'var(--text, #1f2937)',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                  }}
+                  onClick={() => handleGoogleInstantLogin('Hun Nengnim', 'hunnengnim@gmail.com')}
+                  disabled={loading || googleLoading}
+                >
+                  <span style={{ fontSize: 14 }}>⚡</span>
+                  <span>{lang === 'km' ? 'ចូលរហ័សជា៖ hunnengnim@gmail.com' : 'Quick Sign-in: hunnengnim@gmail.com'}</span>
+                </button>
+              </div>
             </>
           )}
 
@@ -1053,6 +1070,43 @@ export default function AuthPage({ onNavigate }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Developer details: How to fix Error 400 origin_mismatch in Google Cloud */}
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                <details>
+                  <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    {lang === 'km' ? 'ℹ️ របៀបបើក Google Popup លើ Domain នេះ' : 'ℹ️ How to enable Google Popup on this Domain'}
+                  </summary>
+                  <div style={{ marginTop: 8, lineHeight: 1.6, padding: '8px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
+                    <p style={{ margin: '0 0 6px' }}>
+                      {lang === 'km'
+                        ? 'ដើម្បីកុំឱ្យមាន Error 400: origin_mismatch សូមចូល Google Cloud Console ហើយបន្ថែម Domain នេះ៖'
+                        : 'To avoid Error 400: origin_mismatch, add this domain to Google Cloud Console:'}
+                    </p>
+                    <code style={{ display: 'block', background: 'rgba(0,0,0,0.06)', padding: '4px 8px', borderRadius: 4, wordBreak: 'break-all', userSelect: 'all', fontWeight: 700 }}>
+                      {typeof window !== 'undefined' ? window.location.origin : 'https://fashion-store-4fyh.onrender.com'}
+                    </code>
+                    <p style={{ margin: '6px 0 0', fontSize: 11 }}>
+                      {lang === 'km'
+                        ? 'ចូល APIs & Services > Credentials > OAuth 2.0 Client ID > Authorized JavaScript origins'
+                        : 'Go to APIs & Services > Credentials > OAuth 2.0 Client ID > Authorized JavaScript origins'}
+                    </p>
+                    <div style={{ marginTop: 10 }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        style={{ width: '100%', fontSize: 11.5 }}
+                        onClick={() => {
+                          const activeClientId = getValidGoogleClientId();
+                          if (activeClientId) launchGoogleOAuth(activeClientId);
+                        }}
+                      >
+                        🚀 {lang === 'km' ? 'បើកសាកល្បង Google Popup' : 'Launch Google Popup'}
+                      </button>
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
           </div>

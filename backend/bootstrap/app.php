@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         // Spatie role / permission middleware aliases
         $middleware->alias([
             'role' => RoleMiddleware::class,

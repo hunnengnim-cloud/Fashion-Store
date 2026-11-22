@@ -17,10 +17,10 @@ class UserResource extends JsonResource
             'avatar_url' => $this->avatar
                 ? (filter_var($this->avatar, FILTER_VALIDATE_URL)
                     ? $this->avatar
-                    : (str_starts_with($this->avatar, '/') ? asset(ltrim($this->avatar, '/')) : asset('storage/'.$this->avatar)))
+                    : (str_starts_with($this->avatar, '/') ? secure_asset(ltrim($this->avatar, '/')) : secure_asset('storage/'.$this->avatar)))
                 : match (strtolower(trim($this->email ?? ''))) {
-                    'hunnengnim@gmail.com' => asset('avatars/hunnengnim.jpg'),
-                    'neng120726@gmail.com', 'neng12072006@gmail.com' => asset('avatars/neng.jpg'),
+                    'hunnengnim@gmail.com' => secure_asset('avatars/hunnengnim.jpg'),
+                    'neng120726@gmail.com', 'neng12072006@gmail.com' => secure_asset('avatars/neng.jpg'),
                     default => ($this->email ? 'https://i.pravatar.cc/150?u='.urlencode(strtolower(trim($this->email))) : null),
                 },
             'gender' => $this->gender,
