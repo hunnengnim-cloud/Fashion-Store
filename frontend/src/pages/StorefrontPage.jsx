@@ -1587,6 +1587,10 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
         lang={lang}
         onClose={() => setCheckoutOpen(false)}
         onNavigateLogin={() => onNavigate('/login')}
+        onOpenOrders={() => {
+          setCheckoutOpen(false);
+          setOrdersOpen(true);
+        }}
       />
       <OrdersModal open={ordersOpen} orders={orders} lang={lang} onClose={() => setOrdersOpen(false)} />
 

@@ -762,8 +762,118 @@ export function WishlistDrawer({ open, items, onClose, lang: propLang }) {
   );
 }
 
+// ── Celebratory Payment Success Audio (Web Audio Chime + AI Voice TTS) ──
+export function playPaymentSuccessSoundAndVoice(lang = 'km', amount = 0, isCod = false) {
+  // 1. Crystal clear luxury celebratory chime chord using Web Audio API
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // Melodic celebratory arpeggio: C5 (523Hz), E5 (659Hz), G5 (784Hz), C6 (1046Hz), sparkle C7 (2093Hz)
+      const notes = [
+        { freq: 523.25, time: 0, dur: 0.32, gain: 0.22 },
+        { freq: 659.25, time: 0.09, dur: 0.34, gain: 0.25 },
+        { freq: 783.99, time: 0.18, dur: 0.4, gain: 0.28 },
+        { freq: 1046.5, time: 0.28, dur: 0.65, gain: 0.32 },
+        { freq: 2093.0, time: 0.38, dur: 0.85, gain: 0.2 },
+      ];
+
+      notes.forEach(({ freq, time, dur, gain }) => {
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+
+        gainNode.gain.setValueAtTime(0, ctx.currentTime + time);
+        gainNode.gain.linearRampToValueAtTime(gain, ctx.currentTime + time + 0.015);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + time + dur);
+
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc.start(ctx.currentTime + time);
+        osc.stop(ctx.currentTime + time + dur + 0.05);
+      });
+    }
+  } catch (err) {
+    console.warn('AudioContext chime error:', err);
+  }
+
+  // 2. AI Voice speech synthesis
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+
+      const isKhmer = lang === 'km';
+      const speechText = isKhmer
+        ? isCod
+          ? 'ការបញ្ជាទិញទទួលបានជោគជ័យ! សូមអរគុណសម្រាប់ការទិញទំនិញនៅ Fashion Store'
+          : 'ការទូទាត់ប្រាក់តាម Bakong KHQR បានជោគជ័យ! សូមអរគុណសម្រាប់ការទិញទំនិញនៅ Fashion Store'
+        : isCod
+          ? 'Order placed successfully! Thank you for shopping with Fashion Store!'
+          : 'Bakong KHQR payment successful! Thank you for shopping with Fashion Store!';
+
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
+      utterance.volume = 1.0;
+
+      const voices = window.speechSynthesis.getVoices() || [];
+      if (isKhmer) {
+        const kmVoice = voices.find(
+          (v) => v.lang && (v.lang.toLowerCase().includes('km') || v.lang.toLowerCase().includes('kh'))
+        );
+        if (kmVoice) {
+          utterance.voice = kmVoice;
+          utterance.lang = kmVoice.lang;
+        } else {
+          // If browser has no native Khmer TTS engine, speak in warm natural English so user always hears AI voice
+          utterance.text = isCod
+            ? 'Order placed successfully! Thank you for shopping with Fashion Store.'
+            : 'Payment successful! Thank you for shopping with Fashion Store.';
+          utterance.lang = 'en-US';
+          const engVoice = voices.find(
+            (v) =>
+              v.lang &&
+              v.lang.startsWith('en') &&
+              (v.name.includes('Natural') ||
+                v.name.includes('Google') ||
+                v.name.includes('Samantha') ||
+                v.name.includes('Jenny') ||
+                v.name.includes('Victoria'))
+          );
+          if (engVoice) utterance.voice = engVoice;
+        }
+      } else {
+        utterance.lang = 'en-US';
+        const engVoice = voices.find(
+          (v) =>
+            v.lang &&
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') ||
+              v.name.includes('Google') ||
+              v.name.includes('Samantha') ||
+              v.name.includes('Jenny'))
+        );
+        if (engVoice) utterance.voice = engVoice;
+      }
+
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 300);
+    }
+  } catch (err) {
+    console.warn('SpeechSynthesis error:', err);
+  }
+}
+
 /* ── 5. Checkout Modal (Bakong KHQR + COD + Orders Sync) ── */
-export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang: customLang }) {
+export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, onOpenOrders, lang: customLang }) {
   const lang = customLang || getLang();
   const t = STOREFRONT_T[lang]?.checkoutModal || STOREFRONT_T.km.checkoutModal;
   const user = getUser();
@@ -772,6 +882,7 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang
   const [address, setAddress] = useState('Phnom Penh, Cambodia');
   const [paymentMethod, setPaymentMethod] = useState('khqr');
   const [qrData, setQrData] = useState(null);
+  const [successOrder, setSuccessOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [showMap, setShowMap] = useState(true);
@@ -820,6 +931,7 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang
       setName(current?.name || '');
       setPhone(current?.phone || '');
       setQrData(null);
+      setSuccessOrder(null);
     }
   }, [open]);
 
@@ -940,14 +1052,20 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang
     );
 
     saveCart([]);
+
+    // 🔊 Play luxury chime & AI Voice announcement!
+    playPaymentSuccessSoundAndVoice(lang, total, isCod);
+
     notify(
       isCod
         ? (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ត្រូវបានទទួលយកភ្លាមៗ! (COD Order Accepted)` : `🎉 Order ${orderNum} placed successfully! (COD Order Accepted)`)
-        : (lang === 'km' ? `🎉 ការបញ្ជាទិញ ${orderNum} ទទួលបានជោគជ័យ!` : `🎉 Order ${orderNum} placed successfully!`),
+        : (lang === 'km' ? `🎉 ការទូទាត់ប្រាក់តាម Bakong KHQR បានជោគជ័យ!` : `🎉 Bakong KHQR Payment for ${orderNum} Received!`),
       'success',
       4500
     );
-    onClose();
+
+    // Show celebration screen with animation and confetti!
+    setSuccessOrder(newOrder);
   };
 
   // Auto-poll Bakong open API every 3.5s to detect live payments (Unconditionally declared hook)
@@ -1038,8 +1156,112 @@ export function CheckoutModal({ open, items = [], onClose, onNavigateLogin, lang
             ✕
           </button>
         </div>
-        <div className="modal-body">
-          {qrData ? (
+        <div className="modal-body" style={{ position: 'relative', overflow: 'hidden' }}>
+          {successOrder ? (
+            <div className="payment-celebration-container">
+              {/* Confetti Explosion Particles */}
+              <div className="payment-confetti-stage" aria-hidden="true">
+                {Array.from({ length: 32 }).map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`confetti-particle p-${idx % 8}`}
+                    style={{
+                      left: `${((idx * 7.7) % 96).toFixed(1)}%`,
+                      animationDelay: `${((idx * 0.08) % 1.6).toFixed(2)}s`,
+                      animationDuration: `${(2.2 + (idx % 5) * 0.35).toFixed(2)}s`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Bouncy Glowing Green Checkmark */}
+              <div className="payment-success-badge-wrap">
+                <div className="payment-success-ring-pulse" />
+                <div className="payment-success-circle">
+                  <svg className="payment-checkmark-svg" viewBox="0 0 52 52">
+                    <circle className="payment-checkmark-circle" cx="26" cy="26" r="23" fill="none" />
+                    <path className="payment-checkmark-check" fill="none" d="M14 27l8 8 16-16" />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="payment-success-title">
+                {lang === 'km' ? '🎉 ការទូទាត់ប្រាក់ជោគជ័យ!' : '🎉 Payment Successful!'}
+              </h2>
+              <p className="payment-success-subtitle">
+                {lang === 'km'
+                  ? 'សូមអរគុណ! ការបញ្ជាទិញរបស់អ្នកត្រូវបានទទួលស្គាល់ និងកំពុងរៀបចំដឹកជញ្ជូន។'
+                  : 'Thank you! Your order has been placed and is being prepared for dispatch.'}
+              </p>
+
+              {/* AI Voice Indicator Banner & Soundwave */}
+              <div className="payment-ai-voice-banner">
+                <div className="ai-voice-info">
+                  <span className="ai-voice-badge">🎙️ AI Audio Voice</span>
+                  <div className="ai-voice-waves" aria-hidden="true">
+                    <span className="ai-wave-bar" />
+                    <span className="ai-wave-bar" />
+                    <span className="ai-wave-bar" />
+                    <span className="ai-wave-bar" />
+                    <span className="ai-wave-bar" />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-ai-replay-voice"
+                  onClick={() => playPaymentSuccessSoundAndVoice(lang, successOrder.total, successOrder.payment_method === 'cod')}
+                >
+                  🔊 {lang === 'km' ? 'ស្ដាប់សារ AI ឡើងវិញ' : 'Replay AI Voice'}
+                </button>
+              </div>
+
+              {/* Order Summary Receipt Box */}
+              <div className="payment-receipt-card">
+                <div className="payment-receipt-row">
+                  <span className="receipt-label">{lang === 'km' ? 'លេខវិក្កយបត្រ (Order ID)' : 'Order ID'}</span>
+                  <span className="receipt-val highlight-order">{successOrder.num}</span>
+                </div>
+                <div className="payment-receipt-row">
+                  <span className="receipt-label">{lang === 'km' ? 'ចំនួនទឹកប្រាក់ (Total Paid)' : 'Total Amount'}</span>
+                  <span className="receipt-val receipt-amount">
+                    {formatUSD(successOrder.total)}{' '}
+                    <span className="receipt-khr">({Math.round(successOrder.total * 4100).toLocaleString('en-US')} ៛)</span>
+                  </span>
+                </div>
+                <div className="payment-receipt-row">
+                  <span className="receipt-label">{lang === 'km' ? 'វិធីសាស្ត្រទូទាត់ (Payment)' : 'Payment Method'}</span>
+                  <span className="receipt-val text-success">
+                    ✓ {successOrder.payment_method === 'khqr' ? 'Bakong KHQR (Verified ជោគជ័យ)' : successOrder.payment}
+                  </span>
+                </div>
+                <div className="payment-receipt-row">
+                  <span className="receipt-label">{lang === 'km' ? 'ក្រុមហ៊ុនដឹកជញ្ជូន (Courier)' : 'Courier Delivery'}</span>
+                  <span className="receipt-val">
+                    {successOrder.courier} · <span className="receipt-tracking">{successOrder.tracking_number}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="payment-success-actions">
+                {onOpenOrders && (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-track-order"
+                    onClick={() => {
+                      onClose();
+                      onOpenOrders();
+                    }}
+                  >
+                    📦 {lang === 'km' ? 'តាមដានការបញ្ជាទិញ (Track Order)' : 'Track Order Status'}
+                  </button>
+                )}
+                <button type="button" className="btn btn-outline btn-success-done" onClick={onClose}>
+                  ✓ {lang === 'km' ? 'រួចរាល់ (Done)' : 'Done'}
+                </button>
+              </div>
+            </div>
+          ) : qrData ? (
             <div className="official-khqr-container">
               {/* Official Red KHQR Banner */}
               <div className="official-khqr-banner">
