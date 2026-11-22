@@ -581,7 +581,6 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
               title={lang === 'km' ? 'ប្រភេទទំនិញ' : 'Category Menu'}
             >
               <MenuIcon size={18} />
-              <span className="mobile-menu-btn-label">{lang === 'km' ? 'ម៉ឺនុយ' : 'Menu'}</span>
               {activeCategory !== 'all' && <span className="mobile-menu-active-dot" />}
             </button>
 

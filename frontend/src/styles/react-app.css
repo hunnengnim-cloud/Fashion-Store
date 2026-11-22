@@ -6639,23 +6639,23 @@ body {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 4px !important;
+    width: 32px !important;
     height: 32px !important;
-    padding: 0 9px !important;
+    padding: 0 !important;
     background: rgba(200, 169, 106, 0.14) !important;
-    border: 1px solid rgba(200, 169, 106, 0.45) !important;
-    border-radius: 999px !important;
+    border: 1.5px solid rgba(200, 169, 106, 0.45) !important;
+    border-radius: 50% !important;
     color: var(--text-primary) !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
     cursor: pointer !important;
     user-select: none !important;
     -webkit-tap-highlight-color: transparent !important;
     transition: all 0.18s ease !important;
+    position: relative !important;
+    flex-shrink: 0 !important;
   }
 
   .nav-mobile-menu-btn:active {
-    transform: scale(0.95) !important;
+    transform: scale(0.92) !important;
     background: rgba(200, 169, 106, 0.28) !important;
   }
 
@@ -6666,12 +6666,14 @@ body {
   }
 
   .mobile-menu-active-dot {
-    width: 6px !important;
-    height: 6px !important;
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    width: 5px !important;
+    height: 5px !important;
     border-radius: 50% !important;
     background: #d4af37 !important;
     box-shadow: 0 0 6px rgba(212, 175, 55, 0.9) !important;
-    margin-left: 2px !important;
   }
 
   /* Hide desktop language switcher & nav actions on mobile */
