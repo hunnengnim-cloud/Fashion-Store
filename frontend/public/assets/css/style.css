@@ -2369,10 +2369,10 @@ footer::before {
 
 /* Responsive Scaling & Luxury Mid-Bottom Menu Dock Integration for Mobile Screens */
 @media (max-width: 768px) {
-  /* Position the moto track gracefully 20px above the mid-bottom menu dock */
+  /* Position the moto track gracefully 5px above the mid-bottom menu dock */
   .scroll-moto-track {
     position: fixed !important;
-    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(73px + env(safe-area-inset-bottom, 0px)) !important;
     left: 50% !important;
     transform: translateX(-50%) translateZ(0) !important;
     -webkit-transform: translateX(-50%) translateZ(0) !important;
