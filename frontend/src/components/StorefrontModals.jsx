@@ -599,7 +599,7 @@ export function CartDrawer({ open, items, onClose, onCheckout, lang: propLang })
                   <span className="luxury-cart-perk-icon">🛡️</span>
                   <div className="luxury-cart-perk-info">
                     <strong>{lang === 'km' ? 'ការទូទាត់សុវត្ថិភាព 100%' : '100% Safe Payments'}</strong>
-                    <p>{lang === 'km' ? 'បាគង KHQR · Visa / Master · COD' : 'Bakong KHQR · Visa / Master · COD'}</p>
+                    <p>{lang === 'km' ? 'KHQR · Visa / Master · COD' : 'KHQR · Visa / Master · COD'}</p>
                   </div>
                 </div>
                 <div className="luxury-cart-perk-row">
@@ -646,13 +646,6 @@ export function CartDrawer({ open, items, onClose, onCheckout, lang: propLang })
               <span>{t.checkoutBtn}</span>
               <span className="luxury-checkout-arrow">→</span>
             </button>
-
-            {/* Payment Trust Chips */}
-            <div className="luxury-payment-chips-strip">
-              <span className="luxury-pay-chip">🇰🇭 Bakong KHQR</span>
-              <span className="luxury-pay-chip">💳 Visa / Master</span>
-              <span className="luxury-pay-chip">💵 COD ប្រគល់លុយផ្ទាល់</span>
-            </div>
           </div>
         )}
       </div>
