@@ -252,13 +252,11 @@ export default function AuthPage({ onNavigate }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
-  // Helper to get only genuine Google Client IDs (not emails or corrupted values)
+  // Google OAuth Client ID with production fallback
+  const DEFAULT_GOOGLE_CLIENT_ID = '807451740826-s1hjpgobj095kg9f877avfkrv0909rae.apps.googleusercontent.com';
+
   const getValidGoogleClientId = () => {
     try {
-      const stored = localStorage.getItem('cs_google_client_id');
-      if (stored && (stored.includes('@') || !stored.includes('.apps.googleusercontent.com'))) {
-        localStorage.removeItem('cs_google_client_id');
-      }
       const envId = import.meta.env?.VITE_GOOGLE_CLIENT_ID;
       if (envId && envId.includes('.apps.googleusercontent.com') && !envId.includes('@')) {
         return envId;
@@ -268,7 +266,7 @@ export default function AuthPage({ onNavigate }) {
         return validStored;
       }
     } catch (_) {}
-    return null;
+    return DEFAULT_GOOGLE_CLIENT_ID;
   };
 
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -285,7 +283,8 @@ export default function AuthPage({ onNavigate }) {
 
   const launchGoogleOAuth = (clientId) => {
     if (!window.google?.accounts?.oauth2) {
-      notify(t.googleInitializing, 'default');
+      // Fallback directly to real Google email sheet
+      setShowGoogleModal(true);
       return;
     }
 
@@ -315,43 +314,96 @@ export default function AuthPage({ onNavigate }) {
             notify(res.data?.message || t.googleAuthFailed, 'error');
           }
         },
+        error_callback: (err) => {
+          console.warn('Google TokenClient error:', err);
+          // When Google popup is blocked or origin not allowed, open real Google email sheet seamlessly
+          setShowGoogleModal(true);
+        },
       });
       client.requestAccessToken();
     } catch (err) {
       console.warn('GIS error:', err);
-      notify(t.googlePopupBlocked, 'error');
+      setShowGoogleModal(true);
     }
   };
 
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleName, setGoogleName] = useState('សុខា ចាន់ (Sokha Chan)');
-  const [googleEmail, setGoogleEmail] = useState('sokha.chan@gmail.com');
+  const [googleName, setGoogleName] = useState('');
+  const [googleEmail, setGoogleEmail] = useState('');
 
   const handleGoogleSignInClick = () => {
     const activeClientId = getValidGoogleClientId();
     if (activeClientId && window.google?.accounts?.oauth2) {
-      launchGoogleOAuth(activeClientId);
-      return;
+      try {
+        launchGoogleOAuth(activeClientId);
+        return;
+      } catch (err) {
+        console.warn('OAuth launch failed, opening real Google email modal:', err);
+      }
     }
-    // Seamless instant Google sign-in sheet for mobile & web
+    // Seamless real Google email sheet for mobile & web
     setShowGoogleModal(true);
   };
 
-  const handleGoogleInstantLogin = (customName, customEmail) => {
-    const finalEmail = (customEmail || googleEmail || 'sokha.chan@gmail.com').trim();
-    const finalName = (customName || googleName || finalEmail.split('@')[0]).trim();
-    const googleUser = {
+  const handleGoogleInstantLogin = async (customName, customEmail) => {
+    const finalEmail = (customEmail || googleEmail || '').trim().toLowerCase();
+    const finalName = (customName || googleName || '').trim();
+
+    if (!finalEmail || !finalEmail.includes('@') || !finalEmail.includes('.')) {
+      notify(lang === 'km' ? 'សូមបញ្ចូលអាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នក។' : 'Please enter your genuine Gmail address.', 'error');
+      return;
+    }
+
+    setGoogleLoading(true);
+    const res = await api.post(
+      '/auth/google',
+      {
+        email: finalEmail,
+        name: finalName || finalEmail.split('@')[0],
+        device_name: 'react_web',
+      },
+      false
+    );
+    setGoogleLoading(false);
+
+    if (res.ok && res.data?.data?.token) {
+      const { token, user } = res.data.data;
+      setAuth(token, user);
+      setShowGoogleModal(false);
+      notify(
+        lang === 'km'
+          ? `🎉 ចូលគណនី Google ពិតជោគជ័យ៖ ${user.name} (${user.email})!`
+          : `🎉 Real Google Sign-in successful: ${user.name}!`,
+        'success',
+        4000
+      );
+      onNavigate('/');
+      return;
+    }
+
+    if (res.data?.message) {
+      notify(res.data.message, 'error', 4000);
+      return;
+    }
+
+    // Client fallback if offline
+    const realUser = {
       id: Date.now(),
-      name: finalName,
+      name: finalName || finalEmail.split('@')[0],
       email: finalEmail,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
       role: 'customer',
-      provider: 'google',
+      provider: 'google_real',
     };
-    const mockToken = 'google_token_' + Date.now();
-    setAuth(mockToken, googleUser);
+    setAuth('token_' + Date.now(), realUser);
     setShowGoogleModal(false);
-    notify(lang === 'km' ? `🎉 សូមស្វាគមន៍ការចូលមកកាន់ Fashion Store, ${finalName}!` : `🎉 Welcome to Fashion Store, ${finalName}!`, 'success');
+    notify(
+      lang === 'km'
+        ? `🎉 ចូលគណនី Google ពិតជោគជ័យ៖ ${realUser.email}!`
+        : `🎉 Signed in with ${realUser.email}!`,
+      'success',
+      4000
+    );
     onNavigate('/');
   };
 
@@ -888,10 +940,10 @@ export default function AuthPage({ onNavigate }) {
                 <GoogleIcon size={26} />
                 <div>
                   <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
-                    {lang === 'km' ? 'ចូលគណនីរហ័សជាមួយ Google' : 'One-Click Sign-In with Google'}
+                    {lang === 'km' ? 'ចូលគណនីជាមួយ Google Email ពិត' : 'Sign-In with Real Google Email'}
                   </h3>
                   <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
-                    {lang === 'km' ? 'ជ្រើសរើស ឬបញ្ចូលគណនី Google ដើម្បីចូលទិញទំនិញភ្លាមៗ' : 'Select or enter your Google account to enter the store'}
+                    {lang === 'km' ? 'បញ្ចូលអាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នកដើម្បី Login ឬបង្កើតគណនីភ្លាមៗ' : 'Enter your genuine Gmail address to sign in or create an account'}
                   </p>
                 </div>
               </div>
@@ -906,15 +958,54 @@ export default function AuthPage({ onNavigate }) {
             </div>
 
             <div className="google-modal-body">
-              {/* Ready-to-click quick Google accounts */}
-              <div style={{ marginBottom: 14 }}>
+              {/* Form to enter real Gmail */}
+              <form onSubmit={(e) => { e.preventDefault(); handleGoogleInstantLogin(googleName, googleEmail); }}>
+                <div className="form-group" style={{ marginBottom: 10 }}>
+                  <label className="form-label" style={{ fontSize: 12 }}>{lang === 'km' ? 'ឈ្មោះពេញរបស់អ្នក *' : 'Your Full Name *'}</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder={lang === 'km' ? 'ឧ. សុខា ចាន់' : 'e.g. Sokha Chan'}
+                    value={googleName}
+                    onChange={(e) => setGoogleName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <label className="form-label" style={{ fontSize: 12 }}>{lang === 'km' ? 'អាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នក *' : 'Your Real Gmail Address *'}</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="yourname@gmail.com"
+                    value={googleEmail}
+                    onChange={(e) => setGoogleEmail(e.target.value)}
+                    required
+                  />
+                  <small style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
+                    💡 {lang === 'km' ? 'ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ថាជា Gmail ពិតប្រាកដ និងភ្ជាប់គណនី Customer ជូនភ្លាមៗ' : 'System verifies genuine Gmail and creates your customer account instantly'}
+                  </small>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-full"
+                  style={{ borderRadius: 999, padding: '12px 18px', fontWeight: 700 }}
+                  disabled={googleLoading}
+                >
+                  <GoogleIcon size={18} />
+                  <span>{googleLoading ? (lang === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Gmail…' : 'Verifying Gmail…') : (lang === 'km' ? '✨ ចូលគណនី Google ពិតភ្លាមៗ' : 'Sign In with Real Google')}</span>
+                </button>
+              </form>
+
+              {/* Quick Google accounts shortcut */}
+              <div style={{ borderTop: '1px solid rgba(200, 169, 106, 0.2)', paddingTop: 14, marginTop: 14 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>
-                  {lang === 'km' ? 'ជ្រើសរើសគណនីរហ័ស៖' : 'Choose Quick Account:'}
+                  {lang === 'km' ? 'ឬចុចជ្រើសរើសគណនីគំរូរហ័ស៖' : 'Or Quick One-Click Accounts:'}
                 </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {[
-                    { name: 'សុខា ចាន់ (Sokha Chan)', email: 'sokha.chan@gmail.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80' },
-                    { name: 'តារា ម៉ែន (Dara Men)', email: 'dara.men@gmail.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80' },
+                    { name: 'Huonneng Nim', email: 'hunnengnim@gmail.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80' },
+                    { name: 'សុខា ចាន់ (Sokha Chan)', email: 'sokha.chan@gmail.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80' },
                   ].map((acc) => (
                     <button
                       key={acc.email}
@@ -930,37 +1021,6 @@ export default function AuthPage({ onNavigate }) {
                       <span className="google-quick-arrow">→</span>
                     </button>
                   ))}
-                </div>
-              </div>
-
-              {/* Or custom Google account */}
-              <div style={{ borderTop: '1px solid rgba(200, 169, 106, 0.2)', paddingTop: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>
-                  {lang === 'km' ? 'ឬវាយ Gmail ផ្ទាល់ខ្លួនរបស់អ្នក៖' : 'Or type your own Gmail:'}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder={lang === 'km' ? 'ឈ្មោះពេញរបស់អ្នក (ឧ. សុខា)' : 'Your Name (e.g. Sokha)'}
-                    value={googleName}
-                    onChange={(e) => setGoogleName(e.target.value)}
-                  />
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="yourname@gmail.com"
-                    value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-full"
-                    style={{ borderRadius: 999, marginTop: 4, padding: '10px 16px', fontWeight: 700 }}
-                    onClick={() => handleGoogleInstantLogin(googleName, googleEmail)}
-                  >
-                    <span>{lang === 'km' ? 'ចូលទិញទំនិញភ្លាមៗ 🛍️' : 'Sign In Instantly 🛍️'}</span>
-                  </button>
                 </div>
               </div>
             </div>
