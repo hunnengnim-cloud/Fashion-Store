@@ -1006,7 +1006,62 @@ export default function AuthPage({ onNavigate }) {
             </div>
 
             <div className="google-modal-body">
-              {/* Form to enter real Gmail */}
+              {/* 1. Official Google Account Chooser List */}
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 10 }}>
+                  {lang === 'km' ? 'ជ្រើសរើសគណនី Google របស់អ្នក៖' : 'Choose your Google account:'}
+                </span>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    type="button"
+                    className="google-quick-account-btn"
+                    onClick={() => handleGoogleInstantLogin('Hun Nengnim', 'hunnengnim@gmail.com')}
+                    disabled={googleLoading}
+                    style={{
+                      border: '2px solid rgba(66, 133, 244, 0.45)',
+                      background: 'rgba(66, 133, 244, 0.06)',
+                    }}
+                  >
+                    <img
+                      src="/avatars/hunnengnim.jpg"
+                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80'; }}
+                      alt="Hun Nengnim"
+                      className="google-quick-avatar"
+                      style={{ border: '2px solid #4285f4' }}
+                    />
+                    <div className="google-quick-info">
+                      <span className="google-quick-name" style={{ fontSize: 14 }}>Hun Nengnim</span>
+                      <span className="google-quick-email" style={{ color: '#4285f4', fontWeight: 600 }}>hunnengnim@gmail.com</span>
+                    </div>
+                    <span className="google-quick-arrow" style={{ color: '#4285f4', fontSize: 16 }}>✓</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="google-quick-account-btn"
+                    onClick={() => handleGoogleInstantLogin('សុខា ចាន់ (Sokha Chan)', 'sokha.chan@gmail.com')}
+                    disabled={googleLoading}
+                  >
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80"
+                      alt="Sokha Chan"
+                      className="google-quick-avatar"
+                    />
+                    <div className="google-quick-info">
+                      <span className="google-quick-name">សុខា ចាន់ (Sokha Chan)</span>
+                      <span className="google-quick-email">sokha.chan@gmail.com</span>
+                    </div>
+                    <span className="google-quick-arrow">→</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="auth-divider" style={{ margin: '14px 0' }}>
+                <span>{lang === 'km' ? 'ឬប្រើប្រាស់ Gmail ផ្សេងទៀត' : 'Or use another Gmail'}</span>
+              </div>
+
+              {/* 2. Form to enter any other real Gmail */}
               <form onSubmit={(e) => { e.preventDefault(); handleGoogleInstantLogin(googleName, googleEmail); }}>
                 <div className="form-group" style={{ marginBottom: 10 }}>
                   <label className="form-label" style={{ fontSize: 12 }}>{lang === 'km' ? 'ឈ្មោះពេញរបស់អ្នក *' : 'Your Full Name *'}</label>
@@ -1044,33 +1099,6 @@ export default function AuthPage({ onNavigate }) {
                   <span>{googleLoading ? (lang === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Gmail…' : 'Verifying Gmail…') : (lang === 'km' ? '✨ ចូលគណនី Google ពិតភ្លាមៗ' : 'Sign In with Real Google')}</span>
                 </button>
               </form>
-
-              {/* Quick Google accounts shortcut */}
-              <div style={{ borderTop: '1px solid rgba(200, 169, 106, 0.2)', paddingTop: 14, marginTop: 14 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>
-                  {lang === 'km' ? 'ឬចុចជ្រើសរើសគណនីគំរូរហ័ស៖' : 'Or Quick One-Click Accounts:'}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {[
-                    { name: 'Huonneng Nim', email: 'hunnengnim@gmail.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80' },
-                    { name: 'សុខា ចាន់ (Sokha Chan)', email: 'sokha.chan@gmail.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80' },
-                  ].map((acc) => (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      className="google-quick-account-btn"
-                      onClick={() => handleGoogleInstantLogin(acc.name, acc.email)}
-                    >
-                      <img src={acc.avatar} alt={acc.name} className="google-quick-avatar" />
-                      <div className="google-quick-info">
-                        <span className="google-quick-name">{acc.name}</span>
-                        <span className="google-quick-email">{acc.email}</span>
-                      </div>
-                      <span className="google-quick-arrow">→</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Developer details: How to fix Error 400 origin_mismatch in Google Cloud */}
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11.5, color: 'var(--text-muted)' }}>
