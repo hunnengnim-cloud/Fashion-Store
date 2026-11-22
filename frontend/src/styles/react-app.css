@@ -6359,17 +6359,189 @@ body {
   display: none;
 }
 
+/* ── Luxury Mobile Floating Bottom Dock (Mid-Bottom on All Phones) ── */
+.mobile-bottom-dock {
+  display: none;
+}
+
 /* ── Mobile Viewport Overrides (Tablets & Phones <= 768px) ── */
 @media (max-width: 768px) {
-  .navbar-fixed-spacer {
-    height: 56px !important;
+  /* On mobile phones, hide action buttons from top navbar since they are in the mid-bottom dock */
+  .navbar-inner .nav-actions > .nav-icon-btn,
+  .navbar-inner .nav-actions > div[style*="position: relative"],
+  .navbar-inner .nav-actions > .nav-signin-btn,
+  .navbar-inner .nav-actions > .nav-admin-btn {
+    display: none !important;
   }
+
+  /* Make top navbar on mobile clean with brand on left and dual language capsule on right */
   .navbar-inner {
-    padding: 8px 12px !important;
-    min-height: 56px !important;
-    gap: 6px !important;
+    padding: 8px 16px !important;
+    min-height: 54px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .storefront-page-shell {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .navbar-fixed-spacer {
+    height: 54px !important;
+  }
+
+  /* Mobile Mid-Bottom Navigation Dock */
+  .mobile-bottom-dock {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    position: fixed !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: clamp(285px, 92vw, 390px) !important;
+    height: 56px !important;
+    padding: 4px 8px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1.5px solid rgba(200, 169, 106, 0.4) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    z-index: 998 !important;
+    box-sizing: border-box !important;
+    -webkit-transform: translateX(-50%) translateZ(0);
+    transform: translateX(-50%) translateZ(0);
+  }
+
+  [data-theme="dark"] .mobile-bottom-dock {
+    background: rgba(14, 17, 26, 0.95) !important;
+    border-color: rgba(200, 169, 106, 0.45) !important;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65), 0 0 18px rgba(197, 160, 89, 0.15) !important;
+  }
+
+  .mobile-dock-btn {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 3px 4px !important;
+    cursor: pointer !important;
+    color: var(--text-secondary, #4b5563) !important;
+    transition: all 0.18s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
+    text-decoration: none !important;
+    user-select: none !important;
+    position: relative !important;
+  }
+
+  [data-theme="dark"] .mobile-dock-btn {
+    color: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  .mobile-dock-btn:active,
+  .mobile-dock-btn.active {
+    color: var(--accent, #c5a059) !important;
+    transform: scale(0.95) !important;
+  }
+
+  [data-theme="dark"] .mobile-dock-btn:active,
+  [data-theme="dark"] .mobile-dock-btn.active {
+    color: #f6d382 !important;
+  }
+
+  .mobile-dock-icon {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .mobile-dock-btn.is-theme-dark .mobile-dock-icon {
+    color: #fde047 !important;
+  }
+
+  .mobile-dock-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -8px !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    padding: 0 4px !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #c5a059 0%, #b38938 100%) !important;
+    color: #000000 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .mobile-dock-label {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+    white-space: nowrap !important;
+    font-family: 'Kantumruy Pro', 'Battambang', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  }
+
+  .mobile-dock-avatar {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 1.5px solid var(--accent, #c5a059) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .mobile-dock-avatar-dot {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #c5a059 0%, #b38938 100%) !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1.5px solid #ffffff !important;
+  }
+
+  .mobile-dock-user-item {
+    position: relative !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .mobile-user-dropdown-menu {
+    position: absolute !important;
+    bottom: calc(100% + 14px) !important;
+    right: -10px !important;
+    top: auto !important;
+    width: 260px !important;
+    max-width: calc(100vw - 28px) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35) !important;
+    transform-origin: bottom right !important;
+    animation: userDropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 1000 !important;
   }
 
   .nav-brand {

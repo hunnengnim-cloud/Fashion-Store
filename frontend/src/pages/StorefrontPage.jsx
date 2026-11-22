@@ -19,6 +19,7 @@ import {
   SunIcon,
   TruckIcon,
   UkFlagIcon,
+  UserIcon,
 } from '../components/Icons';
 import {
   CartDrawer,
@@ -194,6 +195,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
   const carouselRef = useRef(null);
   const sortDropdownRef = useRef(null);
   const userMenuRef = useRef(null);
+  const mobileUserMenuRef = useRef(null);
   const shopSectionRef = useRef(null);
   const normalSectionRef = useRef(null);
 
@@ -240,7 +242,11 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target)) {
         setSortMenuOpen(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target) &&
+        (!mobileUserMenuRef.current || !mobileUserMenuRef.current.contains(e.target))
+      ) {
         setUserMenuOpen(false);
       }
     };
@@ -1319,6 +1325,195 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           </div>
         </div>
       </footer>
+
+      {/* Floating Luxury Mobile Bottom Navigation Dock (Mid-Bottom on All Phone Models) */}
+      <nav className="mobile-bottom-dock" aria-label="Mobile Navigation">
+        <button
+          type="button"
+          className="mobile-dock-btn"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search"
+        >
+          <div className="mobile-dock-icon">
+            <SearchIcon size={20} />
+          </div>
+          <span className="mobile-dock-label">{lang === 'km' ? 'ស្វែងរក' : 'Search'}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-dock-btn ${theme === 'dark' ? 'is-theme-dark' : ''}`}
+          onClick={onToggleTheme}
+          aria-label="Toggle Theme"
+        >
+          <div className="mobile-dock-icon">
+            {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+          </div>
+          <span className="mobile-dock-label">{theme === 'dark' ? (lang === 'km' ? 'ពន្លឺថ្ងៃ' : 'Light') : (lang === 'km' ? 'ពន្លឺយប់' : 'Dark')}</span>
+        </button>
+
+        <button
+          type="button"
+          className="mobile-dock-btn"
+          onClick={() => setWishlistOpen(true)}
+          aria-label="Wishlist"
+        >
+          <div className="mobile-dock-icon">
+            <HeartIcon size={20} filled={wishlist.length > 0} />
+            {wishlist.length > 0 && <span className="mobile-dock-badge">{wishlist.length}</span>}
+          </div>
+          <span className="mobile-dock-label">{lang === 'km' ? 'ពេញចិត្ត' : 'Saved'}</span>
+        </button>
+
+        <button
+          type="button"
+          className="mobile-dock-btn"
+          onClick={() => setCartOpen(true)}
+          aria-label="Shopping Bag"
+        >
+          <div className="mobile-dock-icon">
+            <BagIcon size={20} />
+            {cartCount > 0 && <span className="mobile-dock-badge">{cartCount}</span>}
+          </div>
+          <span className="mobile-dock-label">{lang === 'km' ? 'កន្ត្រក' : 'Bag'}</span>
+        </button>
+
+        {user ? (
+          <div ref={mobileUserMenuRef} className="mobile-dock-user-item">
+            <button
+              type="button"
+              className={`mobile-dock-btn ${userMenuOpen ? 'active' : ''}`}
+              onClick={() => setUserMenuOpen((v) => !v)}
+              aria-label="Account"
+            >
+              <div className="mobile-dock-icon">
+                {user.avatar || user.avatar_url ? (
+                  <img src={user.avatar || user.avatar_url} alt="" className="mobile-dock-avatar" />
+                ) : (
+                  <span className="mobile-dock-avatar-dot">{(user.name || user.email || 'U')[0].toUpperCase()}</span>
+                )}
+              </div>
+              <span className="mobile-dock-label">{user.name?.split(' ')[0] || (lang === 'km' ? 'គណនី' : 'Account')}</span>
+            </button>
+
+            {userMenuOpen && (
+              <div className="user-dropdown-menu mobile-user-dropdown-menu">
+                <div className="user-dropdown-header">
+                  {user.avatar || user.avatar_url ? (
+                    <img
+                      src={user.avatar || user.avatar_url}
+                      alt={user.name}
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid var(--accent)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                      }}
+                    />
+                  ) : (
+                    <div className="user-dropdown-avatar">
+                      {(user.name || user.email || 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="user-dropdown-info">
+                    <div className="user-dropdown-name">{user.name || (lang === 'km' ? 'អតិថិជនកិត្តិយស' : 'Valued Customer')}</div>
+                    <div className="user-dropdown-email" title={user.email}>{user.email}</div>
+                    <span className="user-dropdown-badge">
+                      {adminLoggedIn ? (lang === 'km' ? 'អ្នកគ្រប់គ្រងហាង' : 'Store Administrator') : (lang === 'km' ? 'អតិថិជនបានផ្ទៀងផ្ទាត់' : 'Verified Customer')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="user-dropdown-divider" />
+
+                <div className="user-dropdown-items">
+                  <button
+                    type="button"
+                    className="user-dropdown-item"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      setOrdersOpen(true);
+                    }}
+                  >
+                    <span className="user-dropdown-item-left">
+                      <span className="user-dropdown-item-icon">📦</span>
+                      <span>{t.nav.ordersBtn}</span>
+                    </span>
+                    {orders.length > 0 && (
+                      <span className="user-dropdown-item-count">{orders.length}</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="user-dropdown-item"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      setWishlistOpen(true);
+                    }}
+                  >
+                    <span className="user-dropdown-item-left">
+                      <span className="user-dropdown-item-icon">♡</span>
+                      <span>{t.nav.wishlistTitle}</span>
+                    </span>
+                    {wishlist.length > 0 && (
+                      <span className="user-dropdown-item-count">{wishlist.length}</span>
+                    )}
+                  </button>
+
+                  {adminLoggedIn && (
+                    <button
+                      type="button"
+                      className="user-dropdown-item"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        onNavigate('/admin');
+                      }}
+                    >
+                      <span className="user-dropdown-item-left">
+                        <span className="user-dropdown-item-icon">⚙</span>
+                        <span>{t.nav.adminBtn}</span>
+                      </span>
+                      <span className="user-dropdown-item-arrow">→</span>
+                    </button>
+                  )}
+
+                  <div className="user-dropdown-divider" />
+
+                  <button
+                    type="button"
+                    className="user-dropdown-item is-logout"
+                    onClick={() => {
+                      clearAuth();
+                      setUserMenuOpen(false);
+                      notify(lang === 'km' ? 'បានចាកចេញដោយជោគជ័យ។' : 'Signed out successfully.', 'default');
+                    }}
+                  >
+                    <span className="user-dropdown-item-left">
+                      <span className="user-dropdown-item-icon">🚪</span>
+                      <span>{t.nav.signOutBtn}</span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="mobile-dock-btn"
+            onClick={() => onNavigate('/login')}
+            aria-label="Sign In"
+          >
+            <div className="mobile-dock-icon">
+              <UserIcon size={20} />
+            </div>
+            <span className="mobile-dock-label">{lang === 'km' ? 'ចូល' : 'Sign In'}</span>
+          </button>
+        )}
+      </nav>
 
       {/* Interactive Modals & Drawers */}
       <SearchModal
