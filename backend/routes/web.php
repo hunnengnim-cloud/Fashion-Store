@@ -11,6 +11,23 @@ use Illuminate\Support\Facades\Route;
 | the sibling frontend/ application.
 */
 
+Route::get('/', function () {
+    $spaIndex = file_exists(public_path('index.html'))
+        ? public_path('index.html')
+        : (file_exists(public_path('app/index.html')) ? public_path('app/index.html') : null);
+
+    if ($spaIndex) {
+        return response()->file($spaIndex);
+    }
+
+    return response()->json([
+        'service' => 'Fashion Store API',
+        'status' => 'ok',
+        'api_base' => '/api/v1',
+        'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+    ]);
+});
+
 Route::get('/api/health', fn (): JsonResponse => response()->json([
     'service' => 'Fashion Store API',
     'status' => 'ok',

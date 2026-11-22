@@ -37,9 +37,13 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Copy built frontend SPA into public directory so Laravel can serve the full website
 COPY --from=frontend-builder /app/frontend/dist/ ./public/
 
-# Set directory permissions for Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Ensure storage directories exist and have full read/write permissions
+RUN mkdir -p /var/www/storage/framework/cache/data \
+             /var/www/storage/framework/sessions \
+             /var/www/storage/framework/views \
+             /var/www/storage/logs \
+             /var/www/bootstrap/cache \
+    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 10000
 
