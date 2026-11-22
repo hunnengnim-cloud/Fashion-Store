@@ -783,6 +783,8 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           </div>
         </div>
       </header>
+      {/* Spacer to prevent layout shift with fixed navbar */}
+      <div className="navbar-fixed-spacer" aria-hidden="true" />
 
       {/* Hero Section — Perfect Split Layout */}
       <section className="hero">
