@@ -881,32 +881,6 @@ export default function AuthPage({ onNavigate }) {
                 <GoogleIcon size={18} />
                 <span>{googleLoading ? t.verifyingRealGoogle : t.signInWithGoogle}</span>
               </button>
-
-              <div style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  className="auth-quick-link"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    width: '100%',
-                    padding: '9px 14px',
-                    borderRadius: 12,
-                    background: 'rgba(66, 133, 244, 0.08)',
-                    border: '1px solid rgba(66, 133, 244, 0.25)',
-                    color: 'var(--text, #1f2937)',
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                  }}
-                  onClick={() => handleGoogleInstantLogin('Hun Nengnim', 'hunnengnim@gmail.com')}
-                  disabled={loading || googleLoading}
-                >
-                  <span style={{ fontSize: 14 }}>⚡</span>
-                  <span>{lang === 'km' ? 'ចូលរហ័សជា៖ hunnengnim@gmail.com' : 'Quick Sign-in: hunnengnim@gmail.com'}</span>
-                </button>
-              </div>
             </>
           )}
 
