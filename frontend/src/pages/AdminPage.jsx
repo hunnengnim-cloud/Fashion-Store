@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AdminProductModal from '../components/AdminProductModal';
 import {
   CambodiaFlagIcon,
+  MenuIcon,
   MoonIcon,
   SunIcon,
   UkFlagIcon,
@@ -63,6 +64,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
 
   const [user, setUser] = useState(() => getUser());
   const [activeTab, setActiveTab] = useState('products');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [products, setProducts] = useState(() => getProducts());
   const [layout, setLayout] = useState(() => getStorefrontLayout());
@@ -702,12 +704,33 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
   }
 
   return (
-    <div className="react-admin-shell">
-      {/* Sidebar */}
-      <aside className="react-admin-sidebar">
+    <div className={`react-admin-shell ${mobileSidebarOpen ? 'mobile-sidebar-open' : ''}`}>
+      {/* Mobile Drawer Backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="admin-mobile-drawer-backdrop"
+          onClick={() => setMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar (Desktop fixed left, Mobile off-canvas drawer) */}
+      <aside className={`react-admin-sidebar ${mobileSidebarOpen ? 'is-open' : ''}`}>
         <div className="sidebar-brand">
-          <div className="brand-logo">Fashion Store</div>
-          <div className="brand-sub">{t.sidebar.brandSub}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div className="brand-logo">Fashion Store</div>
+              <div className="brand-sub">{t.sidebar.brandSub}</div>
+            </div>
+            <button
+              type="button"
+              className="admin-mobile-drawer-close"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
@@ -716,7 +739,10 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
               key={tab.id}
               type="button"
               className={`react-nav-item ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setMobileSidebarOpen(false);
+              }}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
@@ -745,19 +771,32 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
       {/* Main Content */}
       <main className="react-admin-main">
         <header className="react-admin-topbar">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--accent)' }}>
-                {t.topbar.console}
-              </span>
-              <span style={{ color: 'var(--border)' }}>/</span>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Mobile Menu Icon Button */}
+            <button
+              type="button"
+              className="admin-mobile-menu-btn"
+              onClick={() => setMobileSidebarOpen((prev) => !prev)}
+              aria-label={lang === 'km' ? 'ម៉ឺនុយ' : 'Menu'}
+              title={lang === 'km' ? 'ម៉ឺនុយ' : 'Menu'}
+            >
+              <MenuIcon size={18} />
+            </button>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--accent)' }}>
+                  {t.topbar.console}
+                </span>
+                <span style={{ color: 'var(--border)' }}>/</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {sidebarTabs.find((x) => x.id === activeTab)?.label}
+                </span>
+              </div>
+              <h1 style={{ fontSize: 20, margin: 0, fontWeight: 800 }}>
                 {sidebarTabs.find((x) => x.id === activeTab)?.label}
-              </span>
+              </h1>
             </div>
-            <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800 }}>
-              {sidebarTabs.find((x) => x.id === activeTab)?.label}
-            </h1>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -916,6 +955,28 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
             </button>
           </div>
         </header>
+
+        {/* Mobile Responsive Icon Menu Bar (Only visible on mobile phones) */}
+        <div className="admin-mobile-icon-strip" role="tablist" aria-label="Admin Navigation Tabs">
+          {sidebarTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                className={`admin-mobile-icon-btn ${isActive ? 'is-active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+                title={tab.label}
+                aria-label={tab.label}
+                aria-selected={isActive}
+                role="tab"
+              >
+                <span className="admin-tab-emoji">{tab.icon}</span>
+                {isActive && <span className="admin-tab-glow-dot" />}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="react-admin-body">
           {/* ── 1. OVERVIEW ── */}

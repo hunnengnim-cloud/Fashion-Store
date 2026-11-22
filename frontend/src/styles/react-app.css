@@ -3520,16 +3520,187 @@ body {
   color: var(--white);
 }
 
+/* ── Admin Mobile Icon Menu & Off-Canvas Drawer ──────────────── */
+.admin-mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(200, 169, 106, 0.14);
+  border: 1.5px solid rgba(200, 169, 106, 0.45);
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+.admin-mobile-menu-btn:hover,
+.admin-mobile-menu-btn:active {
+  background: rgba(200, 169, 106, 0.28);
+  transform: scale(0.94);
+}
+[data-theme="dark"] .admin-mobile-menu-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(200, 169, 106, 0.5);
+  color: #f8fafc;
+}
+
+.admin-mobile-drawer-close {
+  display: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 14px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.admin-mobile-drawer-close:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.admin-mobile-drawer-backdrop {
+  display: none;
+}
+
+.admin-mobile-icon-strip {
+  display: none;
+}
+
 @media (max-width: 820px) {
-  .react-admin-shell {
-    flex-direction: column;
+  .admin-mobile-menu-btn {
+    display: inline-flex !important;
   }
+  .admin-mobile-drawer-close {
+    display: inline-flex !important;
+  }
+
+  /* Backdrop */
+  .admin-mobile-drawer-backdrop {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(8, 10, 16, 0.72) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 1040 !important;
+    animation: adminFadeIn 0.22s ease-out;
+  }
+
+  /* Off-canvas sidebar */
   .react-admin-sidebar {
-    width: 100%;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    z-index: 1050 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease !important;
+    box-shadow: none !important;
+    overflow-y: auto !important;
   }
+
+  .react-admin-sidebar.is-open {
+    transform: translateX(0) !important;
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Shell on mobile */
+  .react-admin-shell {
+    flex-direction: column !important;
+  }
+  .react-admin-main {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Horizontal Icon Menu Strip on mobile */
+  .admin-mobile-icon-strip {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 14px !important;
+    background: var(--card-bg, #ffffff) !important;
+    border-bottom: 1px solid var(--border) !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .admin-mobile-icon-strip::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-mobile-icon-btn {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 14px !important;
+    border: 1.5px solid var(--border) !important;
+    background: var(--bg) !important;
+    color: var(--text-primary) !important;
+    font-size: 20px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .admin-mobile-icon-btn:active {
+    transform: scale(0.92) !important;
+  }
+
+  .admin-mobile-icon-btn.is-active {
+    background: linear-gradient(135deg, #e5b95a 0%, #c59837 50%, #996e19 100%) !important;
+    border-color: #d4af37 !important;
+    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.42) !important;
+    transform: translateY(-1px) scale(1.05) !important;
+  }
+
+  .admin-tab-glow-dot {
+    position: absolute !important;
+    bottom: 3px !important;
+    width: 5px !important;
+    height: 5px !important;
+    border-radius: 50% !important;
+    background: #0b0d13 !important;
+  }
+
+  [data-theme="dark"] .admin-mobile-icon-strip {
+    background: #111827 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  [data-theme="dark"] .admin-mobile-icon-btn {
+    background: #1a2234 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  [data-theme="dark"] .admin-mobile-icon-btn.is-active {
+    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
+    border-color: #d4af37 !important;
+  }
+  [data-theme="dark"] .admin-tab-glow-dot {
+    background: #ffffff !important;
+  }
+
   .grid-choice-cards {
     grid-template-columns: 1fr;
   }
+}
+
+@keyframes adminFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ── Most Popular Products & References Showcase ─────────── */
