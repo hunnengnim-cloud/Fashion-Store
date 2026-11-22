@@ -34,8 +34,8 @@ COPY backend/ ./
 # Install backend dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Copy built frontend SPA into public/app so Laravel can serve the full website
-COPY --from=frontend-builder /app/frontend/dist ./public/app
+# Copy built frontend SPA into public directory so Laravel can serve the full website
+COPY --from=frontend-builder /app/frontend/dist/ ./public/
 
 # Set directory permissions for Laravel
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
@@ -44,6 +44,4 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
 EXPOSE 10000
 
 # Start script: clear config, run database migrations, and serve on Render PORT
-CMD php artisan config:clear && \
-    php artisan migrate --force && \
-    php -S 0.0.0.0:${PORT:-10000} -t public
+CMD sh -c "php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=\${PORT:-10000}"

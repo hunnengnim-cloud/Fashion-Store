@@ -19,8 +19,11 @@ Route::get('/api/health', fn (): JsonResponse => response()->json([
 ]));
 
 Route::fallback(function () {
-    $spaIndex = public_path('app/index.html');
-    if (file_exists($spaIndex)) {
+    $spaIndex = file_exists(public_path('index.html'))
+        ? public_path('index.html')
+        : (file_exists(public_path('app/index.html')) ? public_path('app/index.html') : null);
+
+    if ($spaIndex) {
         return response()->file($spaIndex);
     }
 
