@@ -884,18 +884,38 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                 transition: 'all 0.2s ease',
               }}
             >
-              <img
-                src={avatarPreview || user?.avatar || user?.avatar_url || 'https://i.pravatar.cc/150?u=adminstore%40clothingshop.com'}
-                alt={user?.name || 'Admin'}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '1.5px solid #d4af37',
-                }}
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
+              {avatarPreview || user?.avatar || user?.avatar_url ? (
+                <img
+                  src={avatarPreview || user?.avatar || user?.avatar_url}
+                  alt={user?.name || 'Admin'}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1.5px solid #d4af37',
+                  }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              ) : (
+                <span
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #d4af37, #aa7c11)',
+                    color: '#ffffff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    boxShadow: '0 2px 6px rgba(212, 175, 55, 0.3)',
+                  }}
+                >
+                  👑
+                </span>
+              )}
               <span style={{ fontSize: 12.5, fontWeight: 700 }}>{user?.name || 'Admin'}</span>
               <span style={{ fontSize: 11, color: '#d4af37' }}>⚙️</span>
             </button>
@@ -2488,22 +2508,39 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                         {/* Centered Avatar Display */}
                         <div style={{ textAlign: 'center', padding: '16px 0 20px' }}>
                           <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto 14px' }}>
-                            <img
-                              src={avatarPreview || 'https://i.pravatar.cc/150?u=adminstore%40clothingshop.com'}
-                              alt="Admin Avatar Preview"
-                              style={{
-                                width: 110,
-                                height: 110,
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                border: '3.5px solid #d4af37',
-                                boxShadow: '0 8px 24px rgba(212, 175, 55, 0.28)',
-                                display: 'block',
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://i.pravatar.cc/150?u=adminstore%40clothingshop.com';
-                              }}
-                            />
+                            {avatarPreview || user?.avatar || user?.avatar_url ? (
+                              <img
+                                src={avatarPreview || user?.avatar || user?.avatar_url}
+                                alt="Admin Avatar Preview"
+                                style={{
+                                  width: 110,
+                                  height: 110,
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '3.5px solid #d4af37',
+                                  boxShadow: '0 8px 24px rgba(212, 175, 55, 0.28)',
+                                  display: 'block',
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: 110,
+                                  height: 110,
+                                  borderRadius: '50%',
+                                  background: 'linear-gradient(135deg, #d4af37, #aa7c11)',
+                                  border: '3.5px solid #d4af37',
+                                  boxShadow: '0 8px 24px rgba(212, 175, 55, 0.28)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 48,
+                                  color: '#ffffff',
+                                }}
+                              >
+                                👑
+                              </div>
+                            )}
                             <div style={{
                               position: 'absolute',
                               bottom: 4,
