@@ -431,9 +431,12 @@ export function CartDrawer({ open, items, onClose, onCheckout, lang: propLang })
   if (!open) return null;
 
   const subtotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * (i.qty || 1), 0);
+  const totalItemCount = items.reduce((s, i) => s + (i.qty || 1), 0);
   const freeShippingThreshold = 50;
   const remaining = Math.max(0, freeShippingThreshold - subtotal);
   const progress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+  const shippingFee = subtotal >= freeShippingThreshold ? 0 : (items.length > 0 ? 2.5 : 0);
+  const finalTotal = subtotal + shippingFee;
 
   const changeQty = (idx, delta) => {
     const next = [...items];
@@ -445,85 +448,211 @@ export function CartDrawer({ open, items, onClose, onCheckout, lang: propLang })
 
   return (
     <div
-      className="drawer-overlay open"
+      className="drawer-overlay open luxury-drawer-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="drawer open">
-        <div className="drawer-header">
-          <h3 style={{ margin: 0 }}>{t.title} ({items.reduce((s, i) => s + (i.qty || 1), 0)})</h3>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+      <div className="drawer open luxury-cart-drawer">
+        {/* Luxury Header */}
+        <div className="drawer-header luxury-cart-header">
+          <div className="luxury-cart-title-wrap">
+            <span className="luxury-cart-icon">🛍️</span>
+            <div>
+              <h3 className="luxury-cart-title">{t.title}</h3>
+              <span className="luxury-cart-count-badge">
+                {totalItemCount} {lang === 'km' ? 'មុខទំនិញ' : (totalItemCount === 1 ? 'item' : 'items')}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="luxury-drawer-close-btn"
+            onClick={onClose}
+            aria-label="Close cart drawer"
+          >
             ✕
           </button>
         </div>
 
-        <div style={{ padding: '12px 24px', background: 'var(--warm-gray)', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
-            {remaining > 0
-              ? (lang === 'km' ? `បន្ថែម ${formatUSD(remaining)} ទៀត ដើម្បីទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ 🚀` : `Add ${formatUSD(remaining)} more for FREE Express Shipping 🚀`)
-              : (lang === 'km' ? 'ទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ! 🎉' : 'Unlocked FREE Express Shipping! 🎉')}
+        {/* Luxury Free Shipping Milestone Banner */}
+        <div className="luxury-shipping-meter">
+          <div className="luxury-shipping-meter-head">
+            <span className="luxury-shipping-icon">{remaining > 0 ? '🚚' : '🎉'}</span>
+            <span className="luxury-shipping-text">
+              {remaining > 0
+                ? (lang === 'km' ? `បន្ថែម ${formatUSD(remaining)} ទៀត ដើម្បីទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ!` : `Add ${formatUSD(remaining)} more for FREE Express Shipping!`)
+                : (lang === 'km' ? 'ទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃទូទាំងប្រទេស! 🎉' : 'Unlocked FREE Express Shipping! 🎉')}
+            </span>
           </div>
-          <div style={{ height: 5, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.3s ease' }} />
+          <div className="luxury-shipping-progress-track">
+            <div
+              className={`luxury-shipping-progress-fill ${progress >= 100 ? 'is-complete' : ''}`}
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
 
-        <div className="drawer-body">
+        {/* Drawer Body with Luxury Item Cards */}
+        <div className="drawer-body luxury-cart-body">
           {!items.length ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
-              <div style={{ fontSize: 42, marginBottom: 10 }}>🛍</div>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>{t.emptyTitle}</div>
-              <div style={{ fontSize: 13 }}>{t.emptySub}</div>
+            <div className="luxury-cart-empty">
+              <div className="luxury-cart-empty-icon">🛍️</div>
+              <div className="luxury-cart-empty-title">{t.emptyTitle}</div>
+              <div className="luxury-cart-empty-sub">{t.emptySub}</div>
+              <button type="button" className="luxury-cart-empty-shop-btn" onClick={onClose}>
+                {lang === 'km' ? 'ចាប់ផ្តើមទិញទំនិញឥឡូវនេះ ✨' : 'Explore Collections ✨'}
+              </button>
             </div>
           ) : (
-            items.map((item, idx) => (
-              <div key={`${item.id}-${item.size}-${item.color}`} className="drawer-item">
-                <img src={item.image} alt={item.name} className="drawer-item-img" />
-                <div className="drawer-item-info">
-                  <div className="drawer-item-title">{item.name}</div>
-                  <div className="drawer-item-meta">
-                    {lang === 'km' ? 'ទំហំ' : 'Size'}: {item.size} · {item.color}
+            <>
+              <div className="luxury-cart-items-list">
+                {items.map((item, idx) => {
+                  const unitPrice = Number(item.sale_price || item.price || 0);
+                  const itemTotal = unitPrice * (item.qty || 1);
+                  return (
+                    <div key={`${item.id}-${item.size}-${item.color}-${idx}`} className="luxury-cart-item-card">
+                      <div className="luxury-cart-item-media">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="luxury-cart-item-img"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&q=80';
+                          }}
+                        />
+                      </div>
+                      <div className="luxury-cart-item-content">
+                        <div className="luxury-cart-item-top">
+                          <div className="luxury-cart-item-title" title={item.name}>{item.name}</div>
+                          <button
+                            type="button"
+                            className="luxury-cart-item-remove-btn"
+                            onClick={() => changeQty(idx, -999)}
+                            title={lang === 'km' ? 'លុបចេញ' : 'Remove'}
+                            aria-label={lang === 'km' ? 'លុបចេញ' : 'Remove'}
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="luxury-cart-item-meta-strip">
+                          {item.size && (
+                            <span className="luxury-cart-chip">
+                              {lang === 'km' ? 'ទំហំ' : 'Size'}: {item.size}
+                            </span>
+                          )}
+                          {item.color && (
+                            <span className="luxury-cart-chip">
+                              {item.color}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="luxury-cart-item-bottom">
+                          <div className="luxury-cart-item-price-wrap">
+                            <span className="luxury-cart-item-price">{formatUSD(itemTotal)}</span>
+                            {(item.qty || 1) > 1 && (
+                              <span className="luxury-cart-item-unit-price">
+                                ({formatUSD(unitPrice)} / {lang === 'km' ? 'មួយ' : 'ea'})
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="luxury-qty-stepper">
+                            <button
+                              type="button"
+                              className="luxury-qty-btn"
+                              onClick={() => changeQty(idx, -1)}
+                              aria-label="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <span className="luxury-qty-val">{item.qty || 1}</span>
+                            <button
+                              type="button"
+                              className="luxury-qty-btn"
+                              onClick={() => changeQty(idx, 1)}
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Luxury Storefront Trust Highlights (Fills whitespace gorgeously) */}
+              <div className="luxury-cart-perks-box">
+                <div className="luxury-cart-perk-row">
+                  <span className="luxury-cart-perk-icon">⚡</span>
+                  <div className="luxury-cart-perk-info">
+                    <strong>{lang === 'km' ? 'ដឹកជញ្ជូនរហ័ស 24 ម៉ោង' : 'Express Delivery'}</strong>
+                    <p>{lang === 'km' ? 'ដឹកជូនដល់ផ្ទះទូទាំង 25 ខេត្ត/ក្រុង' : 'Fast door-to-door shipping in Cambodia'}</p>
                   </div>
-                  <div className="drawer-item-price">{formatUSD((item.sale_price || item.price) * (item.qty || 1))}</div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                  <div className="drawer-item-qty">
-                    <button type="button" onClick={() => changeQty(idx, -1)}>
-                      −
-                    </button>
-                    <span>{item.qty || 1}</span>
-                    <button type="button" onClick={() => changeQty(idx, 1)}>
-                      +
-                    </button>
+                <div className="luxury-cart-perk-row">
+                  <span className="luxury-cart-perk-icon">🛡️</span>
+                  <div className="luxury-cart-perk-info">
+                    <strong>{lang === 'km' ? 'ការទូទាត់សុវត្ថិភាព 100%' : '100% Safe Payments'}</strong>
+                    <p>{lang === 'km' ? 'បាគង KHQR · Visa / Master · COD' : 'Bakong KHQR · Visa / Master · COD'}</p>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    style={{ fontSize: 11, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
-                    onClick={() => changeQty(idx, -999)}
-                  >
-                    {lang === 'km' ? 'លុបចេញ' : 'Remove'}
-                  </button>
+                </div>
+                <div className="luxury-cart-perk-row">
+                  <span className="luxury-cart-perk-icon">✨</span>
+                  <div className="luxury-cart-perk-info">
+                    <strong>{lang === 'km' ? 'ទំនិញគុណភាពពិត 100%' : 'Authentic Premium Quality'}</strong>
+                    <p>{lang === 'km' ? 'ប្តូរទំហំដោយមិនគិតថ្លៃក្នុង 7 ថ្ងៃ' : 'Easy 7-day size exchange guarantee'}</p>
+                  </div>
                 </div>
               </div>
-            ))
+            </>
           )}
         </div>
 
+        {/* Luxury Footer & Checkout */}
         {items.length > 0 && (
-          <div className="drawer-footer">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontWeight: 700, fontSize: 16 }}>
-              <span>{t.subtotal}</span>
-              <span>{formatUSD(subtotal)}</span>
+          <div className="drawer-footer luxury-cart-footer">
+            <div className="luxury-cart-summary-block">
+              <div className="luxury-cart-summary-row">
+                <span className="luxury-cart-summary-label">{t.subtotal}</span>
+                <span className="luxury-cart-summary-val">{formatUSD(subtotal)}</span>
+              </div>
+              <div className="luxury-cart-summary-row">
+                <span className="luxury-cart-summary-label">{lang === 'km' ? 'ការដឹកជញ្ជូន' : 'Shipping'}</span>
+                <span className={`luxury-cart-shipping-chip ${shippingFee === 0 ? 'is-free' : ''}`}>
+                  {shippingFee === 0
+                    ? (lang === 'km' ? 'ឥតគិតថ្លៃ (FREE) ✨' : 'FREE ✨')
+                    : formatUSD(shippingFee)}
+                </span>
+              </div>
+              <div className="luxury-cart-summary-divider" />
+              <div className="luxury-cart-summary-row is-total">
+                <div>
+                  <span className="luxury-cart-total-label">{lang === 'km' ? 'សរុបចុងក្រោយ' : 'Final Total'}</span>
+                  <div className="luxury-cart-total-khr">
+                    {lang === 'km' ? 'ប្រហាក់ប្រហែល' : 'Approx.'} {formatKHR(finalTotal)}
+                  </div>
+                </div>
+                <span className="luxury-cart-total-val">{formatUSD(finalTotal)}</span>
+              </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14, fontSize: 12, color: 'var(--text-muted)' }}>
-              <span>{lang === 'km' ? 'ប្រហាក់ប្រហែលជាប្រាក់រៀល' : 'Approx. KHR'}</span>
-              <span>{formatKHR(subtotal)}</span>
-            </div>
-            <button type="button" className="btn btn-primary btn-full" onClick={onCheckout}>
-              {t.checkoutBtn}
+
+            <button type="button" className="luxury-cart-checkout-btn" onClick={onCheckout}>
+              <span>{t.checkoutBtn}</span>
+              <span className="luxury-checkout-arrow">→</span>
             </button>
+
+            {/* Payment Trust Chips */}
+            <div className="luxury-payment-chips-strip">
+              <span className="luxury-pay-chip">🇰🇭 Bakong KHQR</span>
+              <span className="luxury-pay-chip">💳 Visa / Master</span>
+              <span className="luxury-pay-chip">💵 COD ប្រគល់លុយផ្ទាល់</span>
+            </div>
           </div>
         )}
       </div>
@@ -551,56 +680,87 @@ export function WishlistDrawer({ open, items, onClose, lang: propLang }) {
 
   return (
     <div
-      className="drawer-overlay open"
+      className="drawer-overlay open luxury-drawer-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="drawer open">
-        <div className="drawer-header">
-          <h3 style={{ margin: 0 }}>{t.title} ({items.length})</h3>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+      <div className="drawer open luxury-cart-drawer">
+        <div className="drawer-header luxury-cart-header">
+          <div className="luxury-cart-title-wrap">
+            <span className="luxury-cart-icon">🤍</span>
+            <div>
+              <h3 className="luxury-cart-title">{t.title}</h3>
+              <span className="luxury-cart-count-badge">
+                {items.length} {lang === 'km' ? 'មុខទំនិញ' : (items.length === 1 ? 'item' : 'items')}
+              </span>
+            </div>
+          </div>
+          <button type="button" className="luxury-drawer-close-btn" onClick={onClose} aria-label="Close wishlist">
             ✕
           </button>
         </div>
 
-        <div className="drawer-body">
+        <div className="drawer-body luxury-cart-body">
           {!items.length ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
-              <div style={{ fontSize: 42, marginBottom: 10 }}>🤍</div>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>{t.emptyTitle}</div>
-              <div style={{ fontSize: 13 }}>{t.emptySub}</div>
+            <div className="luxury-cart-empty">
+              <div className="luxury-cart-empty-icon">🤍</div>
+              <div className="luxury-cart-empty-title">{t.emptyTitle}</div>
+              <div className="luxury-cart-empty-sub">{t.emptySub}</div>
+              <button type="button" className="luxury-cart-empty-shop-btn" onClick={onClose}>
+                {lang === 'km' ? 'ស្វែងរកទំនិញពេញចិត្ត ✨' : 'Browse Products ✨'}
+              </button>
             </div>
           ) : (
-            items.map((item) => (
-              <div key={item.id ?? item.sku} className="drawer-item">
-                <img src={item.image} alt={item.name} className="drawer-item-img" />
-                <div className="drawer-item-info">
-                  <div className="drawer-item-title">{item.name}</div>
-                  <div className="drawer-item-price">{formatUSD(item.sale_price || item.price)}</div>
+            <div className="luxury-cart-items-list">
+              {items.map((item) => (
+                <div key={item.id ?? item.sku} className="luxury-cart-item-card">
+                  <div className="luxury-cart-item-media">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="luxury-cart-item-img"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&q=80';
+                      }}
+                    />
+                  </div>
+                  <div className="luxury-cart-item-content">
+                    <div className="luxury-cart-item-top">
+                      <div className="luxury-cart-item-title" title={item.name}>{item.name}</div>
+                      <button
+                        type="button"
+                        className="luxury-cart-item-remove-btn"
+                        onClick={() => saveWishlist(items.filter((i) => i.id !== item.id))}
+                        title={t.remove}
+                        aria-label={t.remove}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="luxury-cart-item-bottom" style={{ marginTop: 8 }}>
+                      <span className="luxury-cart-item-price">{formatUSD(item.sale_price || item.price)}</span>
+                      <button
+                        type="button"
+                        className="luxury-wishlist-add-btn"
+                        onClick={() => moveOne(item)}
+                      >
+                        + {lang === 'km' ? 'ដាក់ចូលកន្ត្រក' : 'Add to Bag'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => moveOne(item)}>
-                    + {lang === 'km' ? 'កន្ត្រក' : 'Bag'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    style={{ fontSize: 11, color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
-                    onClick={() => saveWishlist(items.filter((i) => i.id !== item.id))}
-                  >
-                    {t.remove}
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
 
         {items.length > 0 && (
-          <div className="drawer-footer">
-            <button type="button" className="btn btn-accent btn-full" onClick={moveAll}>
-              {lang === 'km' ? 'ដាក់ទាំងអស់ចូលក្នុងកន្ត្រក 🛍' : 'Move All to Bag 🛍'}
+          <div className="drawer-footer luxury-cart-footer">
+            <button type="button" className="luxury-cart-checkout-btn" onClick={moveAll}>
+              <span>{lang === 'km' ? 'ដាក់ទាំងអស់ចូលក្នុងកន្ត្រក 🛍' : 'Move All to Bag 🛍'}</span>
+              <span className="luxury-checkout-arrow">→</span>
             </button>
           </div>
         )}

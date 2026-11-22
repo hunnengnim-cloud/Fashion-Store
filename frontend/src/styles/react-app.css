@@ -7074,6 +7074,691 @@ body {
   background: rgba(200, 169, 106, 0.05) !important;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   LUXURY CART & WISHLIST DRAWER (Modern High-End Boutique)
+══════════════════════════════════════════════════════════════ */
+.luxury-drawer-overlay {
+  background: rgba(10, 12, 18, 0.68) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 1000 !important;
+  transition: opacity 0.28s ease !important;
+}
+
+.luxury-cart-drawer {
+  width: 460px !important;
+  max-width: 100vw !important;
+  background: var(--card-bg, #ffffff) !important;
+  border-left: 1.5px solid rgba(212, 175, 55, 0.28) !important;
+  box-shadow: -14px 0 50px rgba(0, 0, 0, 0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 1001 !important;
+}
+
+[data-theme="dark"] .luxury-cart-drawer {
+  background: #111520 !important;
+  border-left-color: rgba(212, 175, 55, 0.22) !important;
+  box-shadow: -14px 0 60px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ── Header ── */
+.luxury-cart-header {
+  padding: 18px 24px !important;
+  background: var(--card-bg, #ffffff) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+[data-theme="dark"] .luxury-cart-header {
+  background: #111520 !important;
+  border-bottom-color: rgba(212, 175, 55, 0.16) !important;
+}
+
+.luxury-cart-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.luxury-cart-icon {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+.luxury-cart-title {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  margin: 0 0 2px 0 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.luxury-cart-count-badge {
+  display: inline-block !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  background: rgba(212, 175, 55, 0.14) !important;
+  color: #b8860b !important;
+}
+
+[data-theme="dark"] .luxury-cart-count-badge {
+  color: #facc15 !important;
+  background: rgba(250, 204, 21, 0.14) !important;
+}
+
+.luxury-drawer-close-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-drawer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+  transform: rotate(90deg) !important;
+}
+
+[data-theme="dark"] .luxury-drawer-close-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+}
+
+/* ── Free Shipping Progress Milestone ── */
+.luxury-shipping-meter {
+  padding: 14px 24px !important;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.09) 0%, rgba(212, 175, 55, 0.02) 100%) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15) !important;
+}
+
+[data-theme="dark"] .luxury-shipping-meter {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.03) 100%) !important;
+  border-bottom-color: rgba(212, 175, 55, 0.12) !important;
+}
+
+.luxury-shipping-meter-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.luxury-shipping-icon {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+.luxury-shipping-text {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  line-height: 1.4 !important;
+}
+
+.luxury-shipping-progress-track {
+  height: 6px !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+[data-theme="dark"] .luxury-shipping-progress-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.luxury-shipping-progress-fill {
+  height: 100% !important;
+  background: linear-gradient(90deg, #d4af37 0%, #f59e0b 100%) !important;
+  border-radius: 999px !important;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.5) !important;
+}
+
+.luxury-shipping-progress-fill.is-complete {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* ── Body & List ── */
+.luxury-cart-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 18px 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.luxury-cart-items-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+/* ── Cart Item Card ── */
+.luxury-cart-item-card {
+  display: flex !important;
+  gap: 14px !important;
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+  background: var(--card-bg, #ffffff) !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-cart-item-card:hover {
+  border-color: #d4af37 !important;
+  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.16) !important;
+  transform: translateY(-1.5px) !important;
+}
+
+[data-theme="dark"] .luxury-cart-item-card {
+  background: #171d2b !important;
+  border-color: rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+}
+
+.luxury-cart-item-media {
+  width: 78px !important;
+  height: 94px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  background: #f8fafc !important;
+}
+
+[data-theme="dark"] .luxury-cart-item-media {
+  background: #111827 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.luxury-cart-item-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.3s ease !important;
+}
+
+.luxury-cart-item-card:hover .luxury-cart-item-img {
+  transform: scale(1.04) !important;
+}
+
+.luxury-cart-item-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.luxury-cart-item-top {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.luxury-cart-item-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  line-height: 1.35 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+.luxury-cart-item-remove-btn {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: rgba(239, 68, 68, 0.09) !important;
+  color: #ef4444 !important;
+  font-size: 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.18s ease !important;
+}
+
+.luxury-cart-item-remove-btn:hover {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  transform: scale(1.1) !important;
+}
+
+.luxury-cart-item-meta-strip {
+  display: flex !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  margin: 4px 0 8px !important;
+}
+
+.luxury-cart-chip {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 6px !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .luxury-cart-chip {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
+}
+
+.luxury-cart-item-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.luxury-cart-item-price-wrap {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
+}
+
+.luxury-cart-item-price {
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  color: #b8860b !important;
+}
+
+[data-theme="dark"] .luxury-cart-item-price {
+  color: #facc15 !important;
+}
+
+.luxury-cart-item-unit-price {
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Stepper ── */
+.luxury-qty-stepper {
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 999px !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.38) !important;
+  background: rgba(212, 175, 55, 0.06) !important;
+  height: 30px !important;
+  padding: 0 2px !important;
+}
+
+.luxury-qty-btn {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.luxury-qty-btn:hover {
+  background: #d4af37 !important;
+  color: #ffffff !important;
+}
+
+.luxury-qty-val {
+  min-width: 22px !important;
+  text-align: center !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Luxury Trust & Service Perks (Fills Drawer Elegantly) ── */
+.luxury-cart-perks-box {
+  margin-top: 6px !important;
+  padding: 14px 16px !important;
+  border-radius: 16px !important;
+  background: rgba(212, 175, 55, 0.05) !important;
+  border: 1px dashed rgba(212, 175, 55, 0.28) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.luxury-cart-perk-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.luxury-cart-perk-icon {
+  font-size: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+.luxury-cart-perk-info strong {
+  display: block !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 1px !important;
+}
+
+.luxury-cart-perk-info p {
+  margin: 0 !important;
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Empty State ── */
+.luxury-cart-empty {
+  text-align: center !important;
+  padding: 50px 20px !important;
+  color: var(--text-secondary) !important;
+}
+
+.luxury-cart-empty-icon {
+  font-size: 52px !important;
+  margin-bottom: 14px !important;
+}
+
+.luxury-cart-empty-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+  margin-bottom: 6px !important;
+}
+
+.luxury-cart-empty-sub {
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 20px !important;
+}
+
+.luxury-cart-empty-shop-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 42px !important;
+  padding: 0 24px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #d4af37, #b8860b) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.luxury-cart-empty-shop-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45) !important;
+}
+
+/* ── Footer ── */
+.luxury-cart-footer {
+  padding: 18px 24px !important;
+  background: var(--card-bg, #ffffff) !important;
+  border-top: 1.5px solid rgba(212, 175, 55, 0.2) !important;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="dark"] .luxury-cart-footer {
+  background: #111520 !important;
+  border-top-color: rgba(212, 175, 55, 0.16) !important;
+}
+
+.luxury-cart-summary-block {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+  margin-bottom: 14px !important;
+}
+
+.luxury-cart-summary-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 13.5px !important;
+  color: var(--text-secondary) !important;
+}
+
+.luxury-cart-summary-val {
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+.luxury-cart-shipping-chip {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: var(--text-secondary) !important;
+}
+
+.luxury-cart-shipping-chip.is-free {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #059669 !important;
+}
+
+[data-theme="dark"] .luxury-cart-shipping-chip.is-free {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+
+.luxury-cart-summary-divider {
+  height: 1px !important;
+  background: rgba(212, 175, 55, 0.16) !important;
+  margin: 3px 0 !important;
+}
+
+.luxury-cart-summary-row.is-total {
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+}
+
+.luxury-cart-total-label {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: var(--text-primary) !important;
+}
+
+.luxury-cart-total-khr {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+}
+
+.luxury-cart-total-val {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #b8860b !important;
+}
+
+[data-theme="dark"] .luxury-cart-total-val {
+  color: #facc15 !important;
+}
+
+/* ── Hero Checkout Button ── */
+.luxury-cart-checkout-btn {
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.42) !important;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.luxury-cart-checkout-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 28px rgba(212, 175, 55, 0.52) !important;
+  filter: brightness(1.05) !important;
+}
+
+.luxury-cart-checkout-btn:active {
+  transform: scale(0.98) !important;
+}
+
+.luxury-checkout-arrow {
+  font-size: 16px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.luxury-cart-checkout-btn:hover .luxury-checkout-arrow {
+  transform: translateX(4px) !important;
+}
+
+.luxury-payment-chips-strip {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  margin-top: 10px !important;
+}
+
+.luxury-pay-chip {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  background: rgba(0, 0, 0, 0.03) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .luxury-pay-chip {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
+}
+
+/* ── Wishlist Button in Drawer ── */
+.luxury-wishlist-add-btn {
+  height: 30px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #d4af37, #b8860b) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.luxury-wishlist-add-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.45) !important;
+}
+
+/* ── Mobile Phone Responsiveness ("in all phone beautiful too") ── */
+@media (max-width: 540px) {
+  .luxury-cart-drawer {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  .luxury-cart-header {
+    padding: 14px 16px !important;
+  }
+  .luxury-cart-title {
+    font-size: 16px !important;
+  }
+  .luxury-shipping-meter {
+    padding: 10px 16px !important;
+  }
+  .luxury-cart-body {
+    padding: 14px 14px !important;
+    gap: 12px !important;
+  }
+  .luxury-cart-item-card {
+    padding: 12px !important;
+    gap: 12px !important;
+  }
+  .luxury-cart-item-media {
+    width: 70px !important;
+    height: 84px !important;
+  }
+  .luxury-cart-item-title {
+    font-size: 13.5px !important;
+  }
+  .luxury-cart-item-price {
+    font-size: 14.5px !important;
+  }
+  .luxury-cart-perks-box {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+  .luxury-cart-footer {
+    padding: 14px 16px max(14px, env(safe-area-inset-bottom)) !important;
+  }
+  .luxury-cart-checkout-btn {
+    height: 46px !important;
+    font-size: 13.5px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .luxury-cart-item-media {
+    width: 62px !important;
+    height: 76px !important;
+  }
+  .luxury-qty-stepper {
+    height: 28px !important;
+  }
+  .luxury-qty-btn {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 14px !important;
+  }
+  .luxury-pay-chip {
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+  }
+}
+
 /* ── Product Quick View Pill Button (Crisp White Text in Dark & Light Mode) ── */
 .btn-product-view {
   color: #ffffff !important;
