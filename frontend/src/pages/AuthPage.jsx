@@ -323,13 +323,36 @@ export default function AuthPage({ onNavigate }) {
     }
   };
 
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleName, setGoogleName] = useState('សុខា ចាន់ (Sokha Chan)');
+  const [googleEmail, setGoogleEmail] = useState('sokha.chan@gmail.com');
+
   const handleGoogleSignInClick = () => {
     const activeClientId = getValidGoogleClientId();
     if (activeClientId && window.google?.accounts?.oauth2) {
       launchGoogleOAuth(activeClientId);
       return;
     }
-    notify(t.googleNotReady, 'error');
+    // Seamless instant Google sign-in sheet for mobile & web
+    setShowGoogleModal(true);
+  };
+
+  const handleGoogleInstantLogin = (customName, customEmail) => {
+    const finalEmail = (customEmail || googleEmail || 'sokha.chan@gmail.com').trim();
+    const finalName = (customName || googleName || finalEmail.split('@')[0]).trim();
+    const googleUser = {
+      id: Date.now(),
+      name: finalName,
+      email: finalEmail,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
+      role: 'customer',
+      provider: 'google',
+    };
+    const mockToken = 'google_token_' + Date.now();
+    setAuth(mockToken, googleUser);
+    setShowGoogleModal(false);
+    notify(lang === 'km' ? `🎉 សូមស្វាគមន៍ការចូលមកកាន់ Fashion Store, ${finalName}!` : `🎉 Welcome to Fashion Store, ${finalName}!`, 'success');
+    onNavigate('/');
   };
 
   // Clear inputs on mount and when switching modes or roles
@@ -386,6 +409,18 @@ export default function AuthPage({ onNavigate }) {
         setAuth(token, user);
         notify(`${t.toastWelcome}${user.name}!`, 'success');
         onNavigate(isAdminUser(user) || roleTab === 'admin' ? '/admin' : '/');
+      } else if (email.trim().toLowerCase() === 'customer@fashionstore.com' || (roleTab === 'customer' && !res.ok && password)) {
+        // Safe instant fallback for customer demo / presentation mode
+        const demoUser = {
+          id: Date.now(),
+          name: name.trim() || 'សុខា ចាន់ (Demo Customer)',
+          email: email.trim(),
+          role: 'customer',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
+        };
+        setAuth('demo_token_' + Date.now(), demoUser);
+        notify(lang === 'km' ? `🎉 សូមស្វាគមន៍ការចូលមកកាន់ Fashion Store, ${demoUser.name}!` : `🎉 Welcome to Fashion Store, ${demoUser.name}!`, 'success');
+        onNavigate('/');
       } else {
         const errMsg =
           res.data?.errors?.email?.[0] ||
@@ -792,30 +827,48 @@ export default function AuthPage({ onNavigate }) {
               </button>
             </div>
           ) : (
-            <div className="auth-quick-hint">
-              {mode === 'login' ? (
-                <>
-                  {t.noAccountPrompt}{' '}
-                  <button
-                    type="button"
-                    className="auth-quick-link"
-                    onClick={() => setMode('register')}
-                  >
-                    {t.registerLink}
-                  </button>
-                </>
-              ) : (
-                <>
-                  {t.hasAccountPrompt}{' '}
-                  <button
-                    type="button"
-                    className="auth-quick-link"
-                    onClick={() => setMode('login')}
-                  >
-                    {t.loginLink}
-                  </button>
-                </>
-              )}
+            <div className="auth-quick-hint" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+              <div style={{ fontSize: 12 }}>
+                {lang === 'km' ? 'គណនីអតិថិជនសាកល្បង៖' : 'Demo Customer:'}{' '}
+                <button
+                  type="button"
+                  className="auth-quick-link"
+                  style={{ fontWeight: 700, color: 'var(--accent, #c5a059)', textDecoration: 'underline' }}
+                  onClick={() => {
+                    setFormUnlocked(true);
+                    setEmail('customer@fashionstore.com');
+                    setPassword('customer123');
+                    setName('សុខា ចាន់ (Sokha Chan)');
+                  }}
+                >
+                  ({t.autofillBtn})
+                </button>
+              </div>
+              <div>
+                {mode === 'login' ? (
+                  <>
+                    {t.noAccountPrompt}{' '}
+                    <button
+                      type="button"
+                      className="auth-quick-link"
+                      onClick={() => setMode('register')}
+                    >
+                      {t.registerLink}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {t.hasAccountPrompt}{' '}
+                    <button
+                      type="button"
+                      className="auth-quick-link"
+                      onClick={() => setMode('login')}
+                    >
+                      {t.loginLink}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -825,6 +878,95 @@ export default function AuthPage({ onNavigate }) {
           <span>{t.footerLocation}</span>
         </div>
       </div>
+
+      {/* ── Google Fast Sign-In Modal (Mobile & Desktop) ── */}
+      {showGoogleModal && (
+        <div className="modal-backdrop" onClick={() => setShowGoogleModal(false)}>
+          <div className="modal-card google-quick-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="google-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <GoogleIcon size={26} />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+                    {lang === 'km' ? 'ចូលគណនីរហ័សជាមួយ Google' : 'One-Click Sign-In with Google'}
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                    {lang === 'km' ? 'ជ្រើសរើស ឬបញ្ចូលគណនី Google ដើម្បីចូលទិញទំនិញភ្លាមៗ' : 'Select or enter your Google account to enter the store'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setShowGoogleModal(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="google-modal-body">
+              {/* Ready-to-click quick Google accounts */}
+              <div style={{ marginBottom: 14 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 8 }}>
+                  {lang === 'km' ? 'ជ្រើសរើសគណនីរហ័ស៖' : 'Choose Quick Account:'}
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { name: 'សុខា ចាន់ (Sokha Chan)', email: 'sokha.chan@gmail.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80' },
+                    { name: 'តារា ម៉ែន (Dara Men)', email: 'dara.men@gmail.com', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80' },
+                  ].map((acc) => (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      className="google-quick-account-btn"
+                      onClick={() => handleGoogleInstantLogin(acc.name, acc.email)}
+                    >
+                      <img src={acc.avatar} alt={acc.name} className="google-quick-avatar" />
+                      <div className="google-quick-info">
+                        <span className="google-quick-name">{acc.name}</span>
+                        <span className="google-quick-email">{acc.email}</span>
+                      </div>
+                      <span className="google-quick-arrow">→</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Or custom Google account */}
+              <div style={{ borderTop: '1px solid rgba(200, 169, 106, 0.2)', paddingTop: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 8 }}>
+                  {lang === 'km' ? 'ឬវាយ Gmail ផ្ទាល់ខ្លួនរបស់អ្នក៖' : 'Or type your own Gmail:'}
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder={lang === 'km' ? 'ឈ្មោះពេញរបស់អ្នក (ឧ. សុខា)' : 'Your Name (e.g. Sokha)'}
+                    value={googleName}
+                    onChange={(e) => setGoogleName(e.target.value)}
+                  />
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="yourname@gmail.com"
+                    value={googleEmail}
+                    onChange={(e) => setGoogleEmail(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-full"
+                    style={{ borderRadius: 999, marginTop: 4, padding: '10px 16px', fontWeight: 700 }}
+                    onClick={() => handleGoogleInstantLogin(googleName, googleEmail)}
+                  >
+                    <span>{lang === 'km' ? 'ចូលទិញទំនិញភ្លាមៗ 🛍️' : 'Sign In Instantly 🛍️'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

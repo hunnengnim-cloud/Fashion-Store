@@ -34,7 +34,11 @@ export default function App() {
     const onToast = (e) => {
       const id = Date.now() + Math.random();
       const { message, type = 'default', duration = 3200 } = e.detail || {};
-      setToasts((prev) => [...prev, { id, message, type }]);
+      setToasts((prev) => {
+        // Prevent duplicate spam of identical messages and limit to max 1 toast on screen at a time
+        const filtered = prev.filter((p) => p.message !== message);
+        return [...filtered.slice(-1), { id, message, type }];
+      });
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
