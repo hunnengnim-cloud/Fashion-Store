@@ -6698,7 +6698,7 @@ body {
   }
 
   .storefront-page-shell {
-    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .navbar-fixed-spacer {
@@ -6735,10 +6735,10 @@ body {
     box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65), 0 0 18px rgba(197, 160, 89, 0.15) !important;
   }
 
-  /* ── Mobile Scroll Moto Integration: Perched Elegantly on the Mid-Bottom Menu Dock ── */
+  /* ── Mobile Scroll Moto Integration: Perched Elegantly 20px Above the Mid-Bottom Menu Dock ── */
   .scroll-moto-track {
     position: fixed !important;
-    bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     left: 50% !important;
     transform: translateX(-50%) translateZ(0) !important;
     -webkit-transform: translateX(-50%) translateZ(0) !important;
