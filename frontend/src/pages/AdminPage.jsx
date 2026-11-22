@@ -920,30 +920,30 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
               <span style={{ fontSize: 11, color: '#d4af37' }}>⚙️</span>
             </button>
 
-            {/* 3. Luxury Theme Toggle Pill */}
+            {/* 3. Luxury Theme Toggle Icon Button (Icon Only, No Text) */}
             <button
               type="button"
               onClick={onToggleTheme}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
+                width: 38,
                 height: 38,
-                gap: 7,
-                padding: '0 14px',
-                borderRadius: 999,
+                borderRadius: '50%',
                 background: 'var(--card-bg, #ffffff)',
                 border: '1.5px solid var(--border)',
                 cursor: 'pointer',
-                color: 'var(--text)',
+                color: 'var(--text-primary)',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                 transition: 'all 0.2s ease',
-                fontSize: 12.5,
-                fontWeight: 700,
+                flexShrink: 0,
+                padding: 0,
               }}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {theme === 'dark' ? <SunIcon size={16} /> : <MoonIcon size={16} />}
-              <span>{theme === 'dark' ? t.topbar.themeLight : t.topbar.themeDark}</span>
+              {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
             </button>
 
             {/* 4. Luxury Add New Product Pill */}
