@@ -10,7 +10,10 @@ const CATEGORY_ROUTES = new Set(['men', 'women', 'kids', 'shoes', 'accessories',
 function resolveRoute(pathname) {
   const clean = pathname.replace(/^\/|\/$/g, '').replace('.html', '').toLowerCase();
   if (clean === 'admin' || clean === 'react/admin') return { view: 'admin', category: 'all' };
-  if (clean === 'login' || clean === 'react/login') return { view: 'login', category: 'all' };
+  if (clean === 'login' || clean === 'react/login' || clean === 'auth' || clean === 'react/auth') return { view: 'login', category: 'all' };
+  if (typeof window !== 'undefined' && window.location.hash && window.location.hash.includes('access_token=')) {
+    return { view: 'login', category: 'all' };
+  }
   if (clean.startsWith('react/')) {
     const sub = clean.slice('react/'.length);
     return { view: 'store', category: CATEGORY_ROUTES.has(sub) ? sub : 'all' };

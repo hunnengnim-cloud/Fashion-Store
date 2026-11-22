@@ -281,139 +281,76 @@ export default function AuthPage({ onNavigate }) {
     } catch (_) {}
   }, []);
 
-  const launchGoogleOAuth = (clientId) => {
-    if (!window.google?.accounts?.oauth2) {
-      // Fallback directly to real Google email sheet
-      setShowGoogleModal(true);
-      return;
-    }
-
+  const handleGoogleAccessToken = async (accessToken) => {
+    setGoogleLoading(true);
     try {
-      setGoogleLoading(true);
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'email profile openid',
-        callback: async (tokenResponse) => {
-          if (tokenResponse?.access_token) {
-            try {
-              const res = await api.post(
-                '/auth/google',
-                {
-                  access_token: tokenResponse.access_token,
-                  device_name: 'react_web',
-                },
-                false
-              );
-              setGoogleLoading(false);
-              if (res.ok && res.data?.data?.token) {
-                const { token, user } = res.data.data;
-                setAuth(token, user);
-                notify(
-                  lang === 'km'
-                    ? `🎉 ចូលគណនី Google ជោគជ័យ៖ ${user.name} (${user.email})!`
-                    : `🎉 Signed in with Google: ${user.name}!`,
-                  'success',
-                  4000
-                );
-                onNavigate('/');
-                return;
-              }
-              notify(res.data?.message || (lang === 'km' ? 'ការផ្ទៀងផ្ទាត់ Google មិនជោគជ័យ' : 'Google Authentication failed'), 'error');
-            } catch (err) {
-              setGoogleLoading(false);
-              notify(lang === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ Google' : 'Google connection error', 'error');
-            }
-          } else {
-            setGoogleLoading(false);
-          }
+      const res = await api.post(
+        '/auth/google',
+        {
+          access_token: accessToken,
+          device_name: 'react_web',
         },
-        error_callback: (err) => {
-          setGoogleLoading(false);
-          console.warn('Google TokenClient error:', err);
-          setShowGoogleModal(true);
-        },
-      });
-      client.requestAccessToken();
+        false
+      );
+      setGoogleLoading(false);
+      if (res.ok && res.data?.data?.token) {
+        const { token, user } = res.data.data;
+        setAuth(token, user);
+        notify(
+          lang === 'km'
+            ? `🎉 ចូលគណនី Google ជោគជ័យ៖ ${user.name} (${user.email})!`
+            : `🎉 Signed in with Google: ${user.name}!`,
+          'success',
+          4000
+        );
+        onNavigate('/');
+        return;
+      }
+      notify(res.data?.message || (lang === 'km' ? 'ការផ្ទៀងផ្ទាត់ Google មិនជោគជ័យ' : 'Google Authentication failed'), 'error');
     } catch (err) {
       setGoogleLoading(false);
-      console.warn('GIS error:', err);
-      setShowGoogleModal(true);
+      notify(lang === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ Google' : 'Google connection error', 'error');
     }
   };
 
-  const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleName, setGoogleName] = useState('');
-  const [googleEmail, setGoogleEmail] = useState('');
+  // 1. Check on mount if returning from Google OAuth redirect (URL hash contains #access_token=...)
+  useEffect(() => {
+    try {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token=')) {
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+        const token = hashParams.get('access_token');
+        if (token) {
+          window.history.replaceState(null, '', window.location.pathname);
+          handleGoogleAccessToken(token);
+        }
+      }
+    } catch (_) {}
+  }, []);
+
+  // 2. Direct Browse to Google's official Sign-In / Account Chooser page
+  const redirectToGoogle = (clientId) => {
+    setGoogleLoading(true);
+    const origin = window.location.origin;
+    // On localhost: http://localhost:5173/auth
+    // On Render production: https://fashion-store-4fyh.onrender.com/login
+    const redirectUri = origin.includes('localhost')
+      ? `${origin}/auth`
+      : `${origin}/login`;
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'token',
+      scope: 'email profile openid',
+      prompt: 'select_account',
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
 
   const handleGoogleSignInClick = () => {
     const clientId = getValidGoogleClientId();
-    if (window.google?.accounts?.oauth2) {
-      launchGoogleOAuth(clientId);
-    } else {
-      setShowGoogleModal(true);
-    }
-  };
-
-  const handleGoogleInstantLogin = async (customName, customEmail) => {
-    const finalEmail = (customEmail || googleEmail || '').trim().toLowerCase();
-    const finalName = (customName || googleName || '').trim();
-
-    if (!finalEmail || !finalEmail.includes('@') || !finalEmail.includes('.')) {
-      notify(lang === 'km' ? 'សូមបញ្ចូលអាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នក។' : 'Please enter your genuine Gmail address.', 'error');
-      return;
-    }
-
-    setGoogleLoading(true);
-    const res = await api.post(
-      '/auth/google',
-      {
-        email: finalEmail,
-        name: finalName || finalEmail.split('@')[0],
-        device_name: 'react_web',
-      },
-      false
-    );
-    setGoogleLoading(false);
-
-    if (res.ok && res.data?.data?.token) {
-      const { token, user } = res.data.data;
-      setAuth(token, user);
-      setShowGoogleModal(false);
-      notify(
-        lang === 'km'
-          ? `🎉 ចូលគណនី Google ពិតជោគជ័យ៖ ${user.name} (${user.email})!`
-          : `🎉 Real Google Sign-in successful: ${user.name}!`,
-        'success',
-        4000
-      );
-      onNavigate('/');
-      return;
-    }
-
-    if (res.data?.message) {
-      notify(res.data.message, 'error', 4000);
-      return;
-    }
-
-    // Client fallback if offline
-    const realUser = {
-      id: Date.now(),
-      name: finalName || finalEmail.split('@')[0],
-      email: finalEmail,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
-      role: 'customer',
-      provider: 'google_real',
-    };
-    setAuth('token_' + Date.now(), realUser);
-    setShowGoogleModal(false);
-    notify(
-      lang === 'km'
-        ? `🎉 ចូលគណនី Google ពិតជោគជ័យ៖ ${realUser.email}!`
-        : `🎉 Signed in with ${realUser.email}!`,
-      'success',
-      4000
-    );
-    onNavigate('/');
+    redirectToGoogle(clientId);
   };
 
   // Clear inputs on mount and when switching modes or roles
@@ -936,195 +873,6 @@ export default function AuthPage({ onNavigate }) {
           <span>{t.footerLocation}</span>
         </div>
       </div>
-
-      {/* ── Google Fast Sign-In Modal (Mobile & Desktop) ── */}
-      {showGoogleModal && (
-        <div className="modal-backdrop" onClick={() => setShowGoogleModal(false)}>
-          <div className="modal-card google-quick-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="google-modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <GoogleIcon size={26} />
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
-                    {lang === 'km' ? 'ចូលគណនីជាមួយ Google Email ពិត' : 'Sign-In with Real Google Email'}
-                  </h3>
-                  <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)' }}>
-                    {lang === 'km' ? 'បញ្ចូលអាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នកដើម្បី Login ឬបង្កើតគណនីភ្លាមៗ' : 'Enter your genuine Gmail address to sign in or create an account'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setShowGoogleModal(false)}
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="google-modal-body">
-              {/* Option to Launch Official Google Popup Window directly */}
-              <button
-                type="button"
-                className="btn btn-outline btn-full"
-                onClick={() => {
-                  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '807451740826-s1hjpgobj095kg9f877avfkrv0909rae.apps.googleusercontent.com';
-                  launchGoogleOAuth(clientId);
-                }}
-                style={{
-                  borderRadius: 999,
-                  padding: '10px 16px',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  marginBottom: 14,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  borderColor: 'rgba(66, 133, 244, 0.5)',
-                  background: 'rgba(66, 133, 244, 0.04)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                <GoogleIcon size={16} />
-                <span>{lang === 'km' ? '🌐 បើកផ្ទាំង Google Popup ផ្លូវការ' : '🌐 Open Official Google OAuth Popup'}</span>
-              </button>
-
-              {/* 1. Official Google Account Chooser List */}
-              <div style={{ marginBottom: 14 }}>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 10 }}>
-                  {lang === 'km' ? 'ជ្រើសរើសគណនី Google របស់អ្នក៖' : 'Choose your Google account:'}
-                </span>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <button
-                    type="button"
-                    className="google-quick-account-btn"
-                    onClick={() => handleGoogleInstantLogin('Hun Nengnim', 'hunnengnim@gmail.com')}
-                    disabled={googleLoading}
-                    style={{
-                      border: '2px solid rgba(66, 133, 244, 0.45)',
-                      background: 'rgba(66, 133, 244, 0.06)',
-                    }}
-                  >
-                    <img
-                      src="/avatars/hunnengnim.jpg"
-                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80'; }}
-                      alt="Hun Nengnim"
-                      className="google-quick-avatar"
-                      style={{ border: '2px solid #4285f4' }}
-                    />
-                    <div className="google-quick-info">
-                      <span className="google-quick-name" style={{ fontSize: 14 }}>Hun Nengnim</span>
-                      <span className="google-quick-email" style={{ color: '#4285f4', fontWeight: 600 }}>hunnengnim@gmail.com</span>
-                    </div>
-                    <span className="google-quick-arrow" style={{ color: '#4285f4', fontSize: 16 }}>✓</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="google-quick-account-btn"
-                    onClick={() => handleGoogleInstantLogin('សុខា ចាន់ (Sokha Chan)', 'sokha.chan@gmail.com')}
-                    disabled={googleLoading}
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80"
-                      alt="Sokha Chan"
-                      className="google-quick-avatar"
-                    />
-                    <div className="google-quick-info">
-                      <span className="google-quick-name">សុខា ចាន់ (Sokha Chan)</span>
-                      <span className="google-quick-email">sokha.chan@gmail.com</span>
-                    </div>
-                    <span className="google-quick-arrow">→</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="auth-divider" style={{ margin: '14px 0' }}>
-                <span>{lang === 'km' ? 'ឬប្រើប្រាស់ Gmail ផ្សេងទៀត' : 'Or use another Gmail'}</span>
-              </div>
-
-              {/* 2. Form to enter any other real Gmail */}
-              <form onSubmit={(e) => { e.preventDefault(); handleGoogleInstantLogin(googleName, googleEmail); }}>
-                <div className="form-group" style={{ marginBottom: 10 }}>
-                  <label className="form-label" style={{ fontSize: 12 }}>{lang === 'km' ? 'ឈ្មោះពេញរបស់អ្នក *' : 'Your Full Name *'}</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder={lang === 'km' ? 'ឧ. សុខា ចាន់' : 'e.g. Sokha Chan'}
-                    value={googleName}
-                    onChange={(e) => setGoogleName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 14 }}>
-                  <label className="form-label" style={{ fontSize: 12 }}>{lang === 'km' ? 'អាសយដ្ឋាន Gmail ពិតប្រាកដរបស់អ្នក *' : 'Your Real Gmail Address *'}</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="yourname@gmail.com"
-                    value={googleEmail}
-                    onChange={(e) => setGoogleEmail(e.target.value)}
-                    required
-                  />
-                  <small style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
-                    💡 {lang === 'km' ? 'ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ថាជា Gmail ពិតប្រាកដ និងភ្ជាប់គណនី Customer ជូនភ្លាមៗ' : 'System verifies genuine Gmail and creates your customer account instantly'}
-                  </small>
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-full"
-                  style={{ borderRadius: 999, padding: '12px 18px', fontWeight: 700 }}
-                  disabled={googleLoading}
-                >
-                  <GoogleIcon size={18} />
-                  <span>{googleLoading ? (lang === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់ Gmail…' : 'Verifying Gmail…') : (lang === 'km' ? '✨ ចូលគណនី Google ពិតភ្លាមៗ' : 'Sign In with Real Google')}</span>
-                </button>
-              </form>
-
-              {/* Developer details: How to fix Error 400 origin_mismatch in Google Cloud */}
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11.5, color: 'var(--text-muted)' }}>
-                <details>
-                  <summary style={{ cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    {lang === 'km' ? 'ℹ️ របៀបបើក Google Popup លើ Domain នេះ' : 'ℹ️ How to enable Google Popup on this Domain'}
-                  </summary>
-                  <div style={{ marginTop: 8, lineHeight: 1.6, padding: '8px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 8 }}>
-                    <p style={{ margin: '0 0 6px' }}>
-                      {lang === 'km'
-                        ? 'ដើម្បីកុំឱ្យមាន Error 400: origin_mismatch សូមចូល Google Cloud Console ហើយបន្ថែម Domain នេះ៖'
-                        : 'To avoid Error 400: origin_mismatch, add this domain to Google Cloud Console:'}
-                    </p>
-                    <code style={{ display: 'block', background: 'rgba(0,0,0,0.06)', padding: '4px 8px', borderRadius: 4, wordBreak: 'break-all', userSelect: 'all', fontWeight: 700 }}>
-                      {typeof window !== 'undefined' ? window.location.origin : 'https://fashion-store-4fyh.onrender.com'}
-                    </code>
-                    <p style={{ margin: '6px 0 0', fontSize: 11 }}>
-                      {lang === 'km'
-                        ? 'ចូល APIs & Services > Credentials > OAuth 2.0 Client ID > Authorized JavaScript origins'
-                        : 'Go to APIs & Services > Credentials > OAuth 2.0 Client ID > Authorized JavaScript origins'}
-                    </p>
-                    <div style={{ marginTop: 10 }}>
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-sm"
-                        style={{ width: '100%', fontSize: 11.5 }}
-                        onClick={() => {
-                          const activeClientId = getValidGoogleClientId();
-                          if (activeClientId) launchGoogleOAuth(activeClientId);
-                        }}
-                      >
-                        🚀 {lang === 'km' ? 'បើកសាកល្បង Google Popup' : 'Launch Google Popup'}
-                      </button>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
