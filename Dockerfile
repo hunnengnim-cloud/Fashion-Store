@@ -52,5 +52,7 @@ CMD sh -c "\
     if [ -z \"\$APP_KEY\" ]; then export APP_KEY=\"base64:75WSEAs0S+DK1FMABurulhDtMo5tVV+qPV4z1ShSKJI=\"; fi && \
     php artisan config:clear && \
     (php artisan migrate --force || true) && \
+    (php artisan db:seed --class=RolesAndPermissionsSeeder --force || true) && \
     (php artisan db:seed --class=AdminUserSeeder --force || true) && \
+    (php artisan db:seed --force || true) && \
     php artisan serve --host=0.0.0.0 --port=\${PORT:-10000}"

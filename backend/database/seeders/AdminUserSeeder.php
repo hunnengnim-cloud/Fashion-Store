@@ -26,7 +26,11 @@ class AdminUserSeeder extends Seeder
         $admin->password = Hash::make('store168');
         $admin->save();
 
-        $admin->assignRole('super_admin');
+        try {
+            $admin->assignRole('super_admin');
+        } catch (\Throwable $e) {
+            // Role may be populated by RolesAndPermissionsSeeder
+        }
 
         $customer = User::firstOrCreate(
             ['email' => 'dara@example.com'],
@@ -41,7 +45,11 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
-        $customer->assignRole('customer');
+        try {
+            $customer->assignRole('customer');
+        } catch (\Throwable $e) {
+            // Role may be populated by RolesAndPermissionsSeeder
+        }
 
         $this->command->info('Users seeded: AdminStore (adminstore@clothingshop.com) / store168 and dara@example.com / Test@1234');
     }

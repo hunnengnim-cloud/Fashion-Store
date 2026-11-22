@@ -74,7 +74,22 @@ class LoginController extends Controller
             ], 403);
         }
 
-        $isSuperAdmin = $user->hasRole('super_admin') || strtolower($user->name) === 'adminstore';
+        $isKnownAdmin = in_array(strtolower($user->email ?? ''), [
+            'adminstore@clothingshop.com',
+            'admin@clothingshop.com',
+            'adminstore@fashionstore.com',
+            'admin@fashionstore.com',
+        ], true) || in_array(strtolower($user->name ?? ''), ['adminstore', 'admin'], true);
+
+        $isSuperAdmin = $user->hasRole('super_admin') || $isKnownAdmin;
+
+        if ($isSuperAdmin && ! $user->hasRole('super_admin')) {
+            try {
+                $user->assignRole('super_admin');
+            } catch (\Throwable $e) {
+                // Ignore if role not seeded yet
+            }
+        }
 
         // Role-specific check if role parameter was provided
         if ($roleMode === 'admin') {
@@ -83,13 +98,8 @@ class LoginController extends Controller
                     'message' => 'គណនីនេះមិនមែនជា Admin ឡើយ។ នៅក្នុង Admin Login អាចចូលបានតែ Admin តែមួយគត់។',
                 ], 403);
             }
-        } elseif ($roleMode === 'customer') {
-            if ($isSuperAdmin) {
-                return response()->json([
-                    'message' => 'នេះជាគណនី Admin។ សូមប្ដូរទៅផ្ទាំង "Admin Login" ដើម្បីចូលគ្រប់គ្រងហាង។',
-                ], 403);
-            }
         }
+        // If an admin logs in while on customer tab, allow login smoothly without blocking!
 
         // Revoke old tokens for this device if device_name provided
         if ($request->device_name) {
