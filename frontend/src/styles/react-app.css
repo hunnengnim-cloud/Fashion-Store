@@ -6364,25 +6364,337 @@ body {
   display: none;
 }
 
+/* On Desktop, hide mobile left cluster and category drawer */
+.nav-mobile-left-cluster {
+  display: none !important;
+}
+
+/* ── Mobile Category Navigation Drawer ── */
+.mobile-category-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2100;
+  display: flex;
+  justify-content: flex-start;
+  animation: modalBackdropFade 0.22s ease-out;
+}
+
+.mobile-category-drawer {
+  width: min(330px, 86vw);
+  height: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-right: 1.5px solid rgba(200, 169, 106, 0.35);
+  box-shadow: 10px 0 36px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+[data-theme="dark"] .mobile-category-drawer {
+  background: rgba(13, 17, 26, 0.98);
+  border-right-color: rgba(200, 169, 106, 0.45);
+  box-shadow: 12px 0 44px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(200, 169, 106, 0.2);
+}
+
+.mobile-drawer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-drawer-brand-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mobile-drawer-brand-name span {
+  color: var(--accent);
+}
+
+.mobile-drawer-tagline {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.mobile-drawer-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 169, 106, 0.3);
+  background: rgba(200, 169, 106, 0.1);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.mobile-drawer-close-btn:active {
+  transform: scale(0.92);
+  background: rgba(200, 169, 106, 0.25);
+}
+
+.mobile-drawer-body {
+  padding: 16px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.mobile-drawer-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0 4px;
+}
+
+.mobile-drawer-active-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(200, 169, 106, 0.2);
+  color: var(--accent);
+}
+
+.mobile-drawer-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mobile-drawer-category-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  color: var(--text-primary);
+  font-family: inherit;
+  width: 100%;
+}
+
+[data-theme="dark"] .mobile-drawer-category-item {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mobile-drawer-category-item:active {
+  transform: scale(0.98);
+}
+
+.mobile-drawer-category-item.is-active {
+  background: linear-gradient(135deg, rgba(200, 169, 106, 0.18) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border-color: rgba(200, 169, 106, 0.5);
+  box-shadow: 0 2px 10px rgba(200, 169, 106, 0.15);
+}
+
+.mobile-drawer-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mobile-drawer-item-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.mobile-drawer-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobile-drawer-category-item.is-active .mobile-drawer-item-title {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.mobile-drawer-item-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-drawer-item-check {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.mobile-drawer-item-arrow {
+  color: var(--text-muted);
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.mobile-drawer-divider {
+  height: 1px;
+  background: rgba(200, 169, 106, 0.18);
+  margin: 6px 0;
+}
+
+.mobile-drawer-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-drawer-perk-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(200, 169, 106, 0.08);
+  border: 1px dashed rgba(200, 169, 106, 0.28);
+}
+
+.mobile-drawer-perk-card .perk-emoji {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mobile-drawer-perk-card strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.mobile-drawer-perk-card p {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.mobile-drawer-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(200, 169, 106, 0.18);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
 /* ── Mobile Viewport Overrides (Tablets & Phones <= 768px) ── */
 @media (max-width: 768px) {
-  /* On mobile phones, hide action buttons from top navbar since they are in the mid-bottom dock */
-  .navbar-inner .nav-actions > .nav-icon-btn,
-  .navbar-inner .nav-actions > div[style*="position: relative"],
-  .navbar-inner .nav-actions > .nav-signin-btn,
-  .navbar-inner .nav-actions > .nav-admin-btn {
+  /* Hide the horizontal category pill bar on mobile since it is changed to the top left icon menu */
+  .category-strip {
     display: none !important;
   }
 
-  /* Make top navbar on mobile clean with brand on left and dual language capsule on right */
+  /* Show the top-left cluster on mobile */
+  .nav-mobile-left-cluster {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    height: 32px !important;
+    padding: 0 9px !important;
+    background: rgba(200, 169, 106, 0.14) !important;
+    border: 1px solid rgba(200, 169, 106, 0.45) !important;
+    border-radius: 999px !important;
+    color: var(--text-primary) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: all 0.18s ease !important;
+  }
+
+  .nav-mobile-menu-btn:active {
+    transform: scale(0.95) !important;
+    background: rgba(200, 169, 106, 0.28) !important;
+  }
+
+  [data-theme="dark"] .nav-mobile-menu-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(200, 169, 106, 0.5) !important;
+    color: #f8fafc !important;
+  }
+
+  .mobile-menu-active-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background: #d4af37 !important;
+    box-shadow: 0 0 6px rgba(212, 175, 55, 0.9) !important;
+    margin-left: 2px !important;
+  }
+
+  /* Hide desktop language switcher & nav actions on mobile */
+  .nav-lang-switcher-desktop,
+  .navbar-inner .nav-actions {
+    display: none !important;
+  }
+
+  /* Make top navbar on mobile clean with left cluster and brand on right */
   .navbar-inner {
-    padding: 8px 16px !important;
+    padding: 8px 12px !important;
     min-height: 54px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .nav-brand {
+    font-size: 1.15rem !important;
+    flex-shrink: 0 !important;
+    letter-spacing: -0.01em !important;
   }
 
   .storefront-page-shell {

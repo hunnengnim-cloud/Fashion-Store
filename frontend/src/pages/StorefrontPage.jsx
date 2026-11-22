@@ -6,10 +6,12 @@ import {
   BagIcon,
   CambodiaFlagIcon,
   ClockIcon,
+  CloseIcon,
   CreditCardIcon,
   HeartIcon,
   MailIcon,
   MapPinIcon,
+  MenuIcon,
   MoonIcon,
   PhoneIcon,
   SearchIcon,
@@ -165,6 +167,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileCategoryMenuOpen, setMobileCategoryMenuOpen] = useState(false);
   const [contactForm, setContactForm] = useState({
     firstName: '',
     lastName: '',
@@ -568,6 +571,44 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
       {/* Header */}
       <header className="navbar">
         <div className="container-lg navbar-inner">
+          {/* Mobile-only Top Left Cluster: Category Menu Icon + Language Switcher */}
+          <div className="nav-mobile-left-cluster">
+            <button
+              type="button"
+              className="nav-mobile-menu-btn"
+              onClick={() => setMobileCategoryMenuOpen(true)}
+              aria-label={lang === 'km' ? 'បើកម៉ឺនុយប្រភេទទំនិញ' : 'Open Category Menu'}
+              title={lang === 'km' ? 'ប្រភេទទំនិញ' : 'Category Menu'}
+            >
+              <MenuIcon size={18} />
+              <span className="mobile-menu-btn-label">{lang === 'km' ? 'ម៉ឺនុយ' : 'Menu'}</span>
+              {activeCategory !== 'all' && <span className="mobile-menu-active-dot" />}
+            </button>
+
+            <div className="nav-lang-switcher nav-lang-switcher-mobile">
+              <div className="nav-lang-dual-pill" role="group" aria-label="Select Language">
+                <button
+                  type="button"
+                  className={`lang-pill-btn ${lang === 'km' ? 'active' : ''}`}
+                  onClick={() => handleLangChange('km')}
+                  title="ប្ដូរទៅភាសាខ្មែរ"
+                >
+                  <CambodiaFlagIcon size={14} />
+                  <span>ខ្មែរ</span>
+                </button>
+                <button
+                  type="button"
+                  className={`lang-pill-btn ${lang === 'en' ? 'active' : ''}`}
+                  onClick={() => handleLangChange('en')}
+                  title="Switch to English"
+                >
+                  <UkFlagIcon size={14} />
+                  <span>EN</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <a
             href="/"
             className="nav-brand"
@@ -596,8 +637,8 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
           </nav>
 
           <div className="nav-actions">
-            {/* Language Switcher with Dual EN and ខ្មែរ Capsule (All Phone & Desktop) */}
-            <div className="nav-lang-switcher">
+            {/* Desktop Language Switcher */}
+            <div className="nav-lang-switcher nav-lang-switcher-desktop">
               <div className="nav-lang-dual-pill" role="group" aria-label="Select Language">
                 <button
                   type="button"
@@ -1549,6 +1590,127 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
         onNavigateLogin={() => onNavigate('/login')}
       />
       <OrdersModal open={ordersOpen} orders={orders} lang={lang} onClose={() => setOrdersOpen(false)} />
+
+      {/* Mobile Category Navigation Drawer / Sheet */}
+      {mobileCategoryMenuOpen && (
+        <div
+          className="mobile-category-drawer-backdrop"
+          onClick={() => setMobileCategoryMenuOpen(false)}
+          aria-hidden="true"
+        >
+          <div
+            className="mobile-category-drawer"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={lang === 'km' ? 'ម៉ឺនុយប្រភេទទំនិញ' : 'Category Menu'}
+          >
+            <div className="mobile-drawer-header">
+              <div className="mobile-drawer-brand">
+                <span className="mobile-drawer-brand-name">Fashion Store<span>.</span></span>
+                <span className="mobile-drawer-tagline">
+                  {lang === 'km' ? 'បណ្តុំម៉ូដប្រណីត' : 'Curated Luxury Fashion'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="mobile-drawer-close-btn"
+                onClick={() => setMobileCategoryMenuOpen(false)}
+                aria-label={lang === 'km' ? 'បិទ' : 'Close'}
+              >
+                <CloseIcon size={20} />
+              </button>
+            </div>
+
+            <div className="mobile-drawer-body">
+              <div className="mobile-drawer-section-label">
+                <span>{lang === 'km' ? 'ប្រភេទទំនិញ' : 'CATEGORIES'}</span>
+                {activeCategory !== 'all' && (
+                  <span className="mobile-drawer-active-badge">
+                    {navCategories.find((c) => c.key === activeCategory)?.label}
+                  </span>
+                )}
+              </div>
+
+              <div className="mobile-drawer-category-list">
+                {navCategories.map((c) => {
+                  const iconsMap = {
+                    all: '✨',
+                    men: '👔',
+                    women: '👗',
+                    kids: '🧸',
+                    shoes: '👟',
+                    accessories: '👜',
+                    sale: '🔥',
+                  };
+                  const subLabels = {
+                    all: lang === 'km' ? 'All Products' : 'ទំនិញទាំងអស់',
+                    men: lang === 'km' ? "Men's Collection" : 'ការប្រមូលផ្ដុំបុរស',
+                    women: lang === 'km' ? "Women's Collection" : 'ការប្រមូលផ្ដុំនារី',
+                    kids: lang === 'km' ? 'Kids & Teens' : 'កុមារ និងយុវវ័យ',
+                    shoes: lang === 'km' ? 'Footwear & Boots' : 'ស្បែកជើង & ស្បែកក',
+                    accessories: lang === 'km' ? 'Bags & Jewelry' : 'កាបូប & គ្រឿងអលង្ការ',
+                    sale: lang === 'km' ? 'Special Discount Deals' : 'ការបញ្ចុះតម្លៃពិសេស',
+                  };
+                  const isActive = activeCategory === c.key;
+
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      className={`mobile-drawer-category-item ${isActive ? 'is-active' : ''}`}
+                      onClick={() => {
+                        handleSelectCategory(c.key);
+                        setMobileCategoryMenuOpen(false);
+                      }}
+                    >
+                      <span className="mobile-drawer-item-icon">{iconsMap[c.key] || '🛍️'}</span>
+                      <div className="mobile-drawer-item-text">
+                        <span className="mobile-drawer-item-title">{c.label}</span>
+                        <span className="mobile-drawer-item-sub">{subLabels[c.key]}</span>
+                      </div>
+                      {isActive ? (
+                        <span className="mobile-drawer-item-check">✓</span>
+                      ) : (
+                        <span className="mobile-drawer-item-arrow">→</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mobile-drawer-divider" />
+
+              {/* Quick Services & Links */}
+              <div className="mobile-drawer-section-label">
+                <span>{lang === 'km' ? 'សេវាកម្ម & ព័ត៌មាន' : 'SERVICES & INFO'}</span>
+              </div>
+
+              <div className="mobile-drawer-perks">
+                <div className="mobile-drawer-perk-card">
+                  <span className="perk-emoji">🚀</span>
+                  <div>
+                    <strong>{lang === 'km' ? 'ដឹកជញ្ជូនរហ័សភ្នំពេញ' : 'Express Delivery'}</strong>
+                    <p>{lang === 'km' ? 'ឥតគិតថ្លៃសម្រាប់ទំនិញចាប់ពី $50 ឡើង' : 'Free shipping for orders over $50'}</p>
+                  </div>
+                </div>
+
+                <div className="mobile-drawer-perk-card">
+                  <span className="perk-emoji">💵</span>
+                  <div>
+                    <strong>{lang === 'km' ? 'ទូទាត់ពេលទទួល (COD)' : 'Cash on Delivery'}</strong>
+                    <p>{lang === 'km' ? 'ពិនិត្យមើលទំនិញសិនទើបប្រគល់ប្រាក់' : 'Inspect parcel before paying cash'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mobile-drawer-footer">
+              <span>© {new Date().getFullYear()} Fashion Store · Cambodia</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
