@@ -6386,7 +6386,7 @@ body {
   }
 
   .storefront-page-shell {
-    padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .navbar-fixed-spacer {
@@ -6421,6 +6421,61 @@ body {
     background: rgba(14, 17, 26, 0.95) !important;
     border-color: rgba(200, 169, 106, 0.45) !important;
     box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65), 0 0 18px rgba(197, 160, 89, 0.15) !important;
+  }
+
+  /* ── Mobile Scroll Moto Integration: Perched Elegantly on the Mid-Bottom Menu Dock ── */
+  .scroll-moto-track {
+    position: fixed !important;
+    bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateZ(0) !important;
+    -webkit-transform: translateX(-50%) translateZ(0) !important;
+    width: clamp(285px, 92vw, 390px) !important;
+    height: 44px !important;
+    z-index: 999 !important;
+    pointer-events: none !important;
+    overflow: visible !important;
+  }
+
+  .scroll-moto-road {
+    height: 3px !important;
+    border-radius: 999px !important;
+    background: rgba(200, 169, 106, 0.28) !important;
+    border-top: none !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  [data-theme="dark"] .scroll-moto-road {
+    background: rgba(200, 169, 106, 0.35) !important;
+    box-shadow: 0 0 8px rgba(197, 160, 89, 0.25) !important;
+  }
+
+  .scroll-moto-progress {
+    height: 100% !important;
+    border-radius: 999px !important;
+    background: linear-gradient(90deg, #b38938 0%, #d4af37 60%, #faeed4 100%) !important;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8), 0 0 18px rgba(201, 169, 110, 0.4) !important;
+  }
+
+  .scroll-moto {
+    width: 72px !important;
+    height: 40px !important;
+    bottom: 2px !important;
+    pointer-events: auto !important;
+  }
+
+  .scroll-moto-vehicle,
+  .scroll-moto svg {
+    width: 72px !important;
+    height: 40px !important;
+  }
+
+  .scroll-moto-bubble {
+    top: -24px !important;
+    font-size: 9px !important;
+    padding: 2.5px 7px !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
   }
 
   .mobile-dock-btn {

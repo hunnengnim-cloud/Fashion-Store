@@ -935,6 +935,14 @@ function initScrollMoto() {
   let facingRight = true;
 
   function updateTarget() {
+    const path = (window.location.pathname || '').toLowerCase();
+    if (path.includes('/admin') || path.includes('/login') || path.includes('/auth') || document.body.classList.contains('admin-page')) {
+      track.style.display = 'none';
+      return;
+    } else {
+      track.style.display = '';
+    }
+
     const docHeight = Math.max(
       document.body.scrollHeight,
       document.documentElement.scrollHeight,
@@ -956,18 +964,24 @@ function initScrollMoto() {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
     const progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
 
-    const motoWidth = motoEl.offsetWidth || 120;
-    const screenWidth = window.innerWidth;
-    const maxTravel = Math.max(screenWidth - motoWidth - 16, 0);
+    const isMobile = window.innerWidth <= 768;
+    const trackWidth = track.clientWidth || (isMobile ? Math.min(Math.max(285, window.innerWidth * 0.92), 390) : window.innerWidth);
+    const motoWidth = motoEl.offsetWidth || (isMobile ? 72 : 120);
+    const maxTravel = Math.max(trackWidth - motoWidth - (isMobile ? 4 : 16), 0);
 
-    targetX = progress * maxTravel;
+    targetX = (isMobile ? 2 : 0) + progress * maxTravel;
 
     if (progressBar) {
       progressBar.style.width = (progress * 100).toFixed(1) + '%';
     }
     if (bubbleText) {
       const pct = Math.round(progress * 100);
-      bubbleText.innerHTML = pct >= 99 ? '🛍️ Arrived! Happy Shopping 🎉' : `🛵 VIP Delivery · <strong>${pct}%</strong>`;
+      const isKm = document.documentElement.lang === 'km' || localStorage.getItem('cs_lang') === 'km';
+      if (pct >= 99) {
+        bubbleText.innerHTML = isKm ? '🛍️ ដល់កន្លែងហើយ! រីករាយការទិញទំនិញ 🎉' : '🛍️ Arrived! Happy Shopping 🎉';
+      } else {
+        bubbleText.innerHTML = isKm ? `🛵 ដឹកជញ្ជូន VIP · <strong>${pct}%</strong>` : `🛵 VIP Delivery · <strong>${pct}%</strong>`;
+      }
     }
   }
 
@@ -1026,8 +1040,11 @@ function initScrollMoto() {
   motoEl.addEventListener('click', (e) => {
     e.stopPropagation();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    const isKm = document.documentElement.lang === 'km' || localStorage.getItem('cs_lang') === 'km';
+    const msg = isKm ? 'ពីបៗ! ជិះត្រឡប់ទៅលើវិញ! 🛵💨' : 'Pip pip! Riding back to top! 🛵💨';
+    window.dispatchEvent(new CustomEvent('fashionstore:toast', { detail: { message: msg, type: 'default', duration: 2000 } }));
     if (typeof toast === 'function') {
-      toast('Pip pip! Riding back to top! 🛵💨', 'default', 1800);
+      toast(msg, 'default', 1800);
     }
   });
 }
