@@ -483,7 +483,7 @@ export default function AuthPage({ onNavigate }) {
         setAuth('admin_token_' + Date.now(), adminUser);
         notify(lang === 'km' ? '🎉 ចូលប្រព័ន្ធ Admin ជោគជ័យ!' : '🎉 Welcome back, AdminStore!', 'success');
         onNavigate('/admin');
-      } else if (email.trim().toLowerCase() === 'customer@fashionstore.com' || (roleTab === 'customer' && !res.ok && password)) {
+      } else if (email.trim().toLowerCase() === 'customer@fashionstore.com' || (roleTab === 'customer' && res.status === 0)) {
         // Safe instant fallback for customer demo / presentation mode
         const demoUser = {
           id: Date.now(),

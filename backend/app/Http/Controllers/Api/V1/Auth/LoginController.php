@@ -24,29 +24,6 @@ class LoginController extends Controller
         $loginInput = trim($request->email);
         $roleMode = $request->role ? strtolower($request->role) : null;
 
-        // If customer login with an email address, verify that the email domain is real
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            $isKnownAdmin = in_array(strtolower($loginInput), [
-                'adminstore@clothingshop.com',
-                'admin@clothingshop.com',
-                'adminstore@fashionstore.com',
-                'admin@fashionstore.com',
-            ], true);
-
-            // Customers must have real emails
-            if (! $isKnownAdmin) {
-                $validation = $this->emailVerifier->validateRealEmail($loginInput);
-                if (! $validation['valid']) {
-                    return response()->json([
-                        'message' => $validation['message'] ?? 'Email នេះមិនពិតប្រាកដឡើយ។ Login មិនជោគជ័យ។',
-                        'errors' => [
-                            'email' => [$validation['message'] ?? 'Email នេះមិនមានម៉ាស៊ីនបម្រើទទួលសំបុត្រ ឬជា Email ក្លែងក្លាយឡើយ។'],
-                        ],
-                    ], 422);
-                }
-            }
-        }
-
         $user = User::where('email', $loginInput)
             ->orWhere('phone', $loginInput)
             ->orWhere('name', $loginInput)

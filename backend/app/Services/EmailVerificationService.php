@@ -88,7 +88,7 @@ class EmailVerificationService
             return [
                 'valid' => false,
                 'is_google' => false,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Invalid email format).',
+                'message' => 'ទម្រង់អ៊ីមែលមិនត្រឹមត្រូវឡើយ (Invalid email format).',
             ];
         }
 
@@ -100,7 +100,7 @@ class EmailVerificationService
             return [
                 'valid' => false,
                 'is_google' => false,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។',
+                'message' => 'ទម្រង់អ៊ីមែលមិនត្រឹមត្រូវឡើយ (Invalid email format).',
             ];
         }
 
@@ -109,177 +109,49 @@ class EmailVerificationService
             return [
                 'valid' => false,
                 'is_google' => false,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Disposable email blocked).',
+                'message' => 'សូមប្រើប្រាស់អ៊ីមែលពិតប្រាកដ។ មិនអនុញ្ញាតឱ្យប្រើ Temporary / Disposable Email ឡើយ។',
             ];
         }
 
-        // Check if domain is standard Google / Gmail
+        // Standard known valid email providers
         $isGoogleDomain = in_array($domain, ['gmail.com', 'googlemail.com'], true);
-
-        // Strict Google username length and character check (Google requires 6-30 chars)
-        if ($isGoogleDomain) {
-            $userLen = strlen($username);
-            if ($userLen < 6 || $userLen > 30) {
-                return [
-                    'valid' => false,
-                    'is_google' => true,
-                    'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Google requires 6-30 characters).',
-                ];
-            }
-
-            // Cannot start or end with a dot, cannot have consecutive dots
-            if (str_starts_with($username, '.') || str_ends_with($username, '.') || str_contains($username, '..')) {
-                return [
-                    'valid' => false,
-                    'is_google' => true,
-                    'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។',
-                ];
-            }
-        }
-
-        // Check for obvious fake/test patterns in username
-        $cleanUsername = strtolower(str_replace(['.', '_', '-'], '', $username));
-        foreach (self::FAKE_USERNAMES as $fake) {
-            // Block exact matches (e.g. "test", "fake", "dummy") or test strings with digits (e.g. "test123", "fake99")
-            if ($cleanUsername === $fake || preg_match('/^'.preg_quote($fake, '/').'\d+$/', $cleanUsername)) {
-                return [
-                    'valid' => false,
-                    'is_google' => $isGoogleDomain,
-                    'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-                ];
-            }
-        }
-
-        // Block explicit test prefix with separator (e.g. "test.account", "fake_user")
-        if (preg_match('/^(test|fake|temp|dummy|sample|example)[._-]/i', $username)) {
-            return [
-                'valid' => false,
-                'is_google' => $isGoogleDomain,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-            ];
-        }
-
-        // Block if username is just repeated letters or numbers (e.g. "aaaaaa", "111111")
-        if (preg_match('/^(.)\1+$/', $cleanUsername) || preg_match('/([a-z0-9])\1{2,}/', $cleanUsername)) {
-            return [
-                'valid' => false,
-                'is_google' => $isGoogleDomain,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-            ];
-        }
-
-        // Block random consonant smash with no vowels (e.g. "bcdfgh", "zxcvbn")
-        $lettersOnly = preg_replace('/[^a-z]/', '', $cleanUsername);
-        if (strlen($lettersOnly) >= 5 && ! preg_match('/[aeiouy]/', $lettersOnly)) {
-            return [
-                'valid' => false,
-                'is_google' => $isGoogleDomain,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-            ];
-        }
-
-        // Block 5 or more consecutive consonants (unpronounceable keyboard smash e.g. "wuyfehgwfdgh")
-        if (preg_match('/[bcdfghjklmnpqrstvwxz]{5,}/i', $cleanUsername)) {
-            return [
-                'valid' => false,
-                'is_google' => $isGoogleDomain,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-            ];
-        }
-
-        // Block 4 or more consecutive vowels (e.g. "uoiea", "aaaa")
-        if (preg_match('/[aeiou]{4,}/i', $cleanUsername)) {
-            return [
-                'valid' => false,
-                'is_google' => $isGoogleDomain,
-                'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-            ];
-        }
-
-        // Block obvious keyboard sequential mash
-        $keyboardPatterns = [
-            'asdf', 'sdfg', 'dfgh', 'fghj', 'ghjk', 'hjkl',
-            'qwer', 'wert', 'erty', 'rtyu', 'tyui', 'yuio', 'uiop',
-            'zxcv', 'xcvb', 'cvbn', 'vbnm',
-            'lkjh', 'kjhg', 'jhgf', 'hgfd', 'gfds', 'fdsa',
-            'poiuy', 'oiuyt', 'iuytr', 'uytre', 'ytrew', 'trewq',
-            '1234', '2345', '3456', '4567', '5678', '6789', '7890',
-            '0987', '9876', '8765', '7654', '6543', '5432', '4321',
+        $knownValidDomains = [
+            'gmail.com', 'googlemail.com', 'yahoo.com', 'hotmail.com',
+            'outlook.com', 'icloud.com', 'me.com', 'mac.com', 'live.com',
+            'msn.com', 'aol.com', 'zoho.com', 'proton.me', 'protonmail.com',
         ];
-        foreach ($keyboardPatterns as $pat) {
-            if (str_contains($cleanUsername, $pat)) {
-                return [
-                    'valid' => false,
-                    'is_google' => $isGoogleDomain,
-                    'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-                ];
-            }
+
+        if (in_array($domain, $knownValidDomains, true)) {
+            return [
+                'valid' => true,
+                'is_google' => $isGoogleDomain,
+                'message' => 'Email ត្រូវបានផ្ទៀងផ្ទាត់ថាជា Email ពិតប្រាកដ។',
+            ];
         }
 
-        // Block extremely low vowel ratio in long usernames (keyboard mashing)
-        if (strlen($lettersOnly) >= 8) {
-            preg_match_all('/[aeiouy]/i', $lettersOnly, $vMatches);
-            $vowelCount = count($vMatches[0] ?? []);
-            if (($vowelCount / strlen($lettersOnly)) < 0.20) {
-                return [
-                    'valid' => false,
-                    'is_google' => $isGoogleDomain,
-                    'message' => 'Email នេះមិនមែនជា Email ពិតប្រាកដឡើយ មិនអាចផ្ញើលេខកូដ OTP បានទេ។ (Email is not real and cannot send code OTP).',
-                ];
-            }
-        }
-
-        // Check if domain is standard Google / Gmail
-        $isGoogleDomain = in_array($domain, ['gmail.com', 'googlemail.com'], true);
-
-        // Standard Google domains are known valid immediately without DNS latency
-        if ($isGoogleDomain) {
-            $hasMx = true;
-        } else {
-            // Check DNS MX record for real mail exchange server
-            $hasMx = false;
-            try {
-                if (function_exists('checkdnsrr')) {
-                    $hasMx = @checkdnsrr($domain, 'MX');
-                } else {
-                    $hasMx = true;
-                }
-            } catch (\Throwable $e) {
-                Log::warning('DNS MX check failed for domain '.$domain.': '.$e->getMessage());
-                // If DNS is unreachable in isolated environment, fallback to domain validation
+        // For other custom domains, check DNS MX records
+        $hasMx = false;
+        try {
+            if (function_exists('checkdnsrr')) {
+                $hasMx = @checkdnsrr($domain, 'MX');
+            } else {
                 $hasMx = true;
             }
+        } catch (\Throwable $e) {
+            $hasMx = true;
         }
 
         if (! $hasMx) {
             return [
                 'valid' => false,
                 'is_google' => false,
-                'message' => "Domain '{$domain}' មិនមានម៉ាស៊ីនបម្រើ Email (Mail Server/MX) ពិតប្រាកដឡើយ។ Email នេះមិនពិតទេ។",
+                'message' => "Domain '{$domain}' មិនមានម៉ាស៊ីនបម្រើ Email (Mail Server/MX) ពិតប្រាកដឡើយ។",
             ];
-        }
-
-        // Check if Google MX servers are used by this domain
-        if (! $isGoogleDomain && function_exists('dns_get_record')) {
-            try {
-                $mxRecords = @dns_get_record($domain, DNS_MX);
-                if (is_array($mxRecords)) {
-                    foreach ($mxRecords as $rec) {
-                        $target = strtolower($rec['target'] ?? '');
-                        if (str_contains($target, 'google') || str_contains($target, 'googlemail') || str_contains($target, 'l.google.com')) {
-                            $isGoogleDomain = true;
-                            break;
-                        }
-                    }
-                }
-            } catch (\Throwable) {
-                // Keep domain check result
-            }
         }
 
         return [
             'valid' => true,
-            'is_google' => $isGoogleDomain,
+            'is_google' => false,
             'message' => 'Email ត្រូវបានផ្ទៀងផ្ទាត់ថាជា Email ពិតប្រាកដ។',
         ];
     }
