@@ -105,7 +105,12 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     () => user?.avatar || user?.avatar_url || ''
   );
   const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarImgError, setAvatarImgError] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    setAvatarImgError(false);
+  }, [avatarPreview, user?.avatar, user?.avatar_url]);
 
   const [passwordForm, setPasswordForm] = useState({
     current_password: '',
@@ -828,13 +833,16 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
               className={`admin-topbar-profile-btn ${activeTab === 'settings' ? 'is-active' : ''}`}
               onClick={() => setActiveTab('settings')}
               title={t.topbar.profileHint}
+              aria-label={user?.name || 'Admin'}
             >
-              {avatarPreview || user?.avatar || user?.avatar_url ? (
+              {!avatarImgError && (avatarPreview || user?.avatar || user?.avatar_url) ? (
                 <img
                   src={avatarPreview || user?.avatar || user?.avatar_url}
                   alt={user?.name || 'Admin'}
                   className="admin-profile-avatar"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  onError={() => {
+                    setAvatarImgError(true);
+                  }}
                 />
               ) : (
                 <span className="admin-profile-crown">
