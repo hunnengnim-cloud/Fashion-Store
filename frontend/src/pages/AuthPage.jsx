@@ -884,65 +884,32 @@ export default function AuthPage({ onNavigate }) {
             </>
           )}
 
-          {/* Quick Helper for Admin or Customer Demo */}
-          {roleTab === 'admin' ? (
-            <div className="auth-quick-hint">
-              {t.adminAutofill}{' '}
-              <button
-                type="button"
-                className="auth-quick-link"
-                onClick={() => {
-                  setFormUnlocked(true);
-                  setEmail('adminstore@clothingshop.com');
-                  setPassword('store168');
-                }}
-              >
-                ({t.autofillBtn})
-              </button>
-            </div>
-          ) : (
-            <div className="auth-quick-hint" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-              <div style={{ fontSize: 12 }}>
-                {lang === 'km' ? 'គណនីអតិថិជនសាកល្បង៖' : 'Demo Customer:'}{' '}
-                <button
-                  type="button"
-                  className="auth-quick-link"
-                  style={{ fontWeight: 700, color: 'var(--accent, #c5a059)', textDecoration: 'underline' }}
-                  onClick={() => {
-                    setFormUnlocked(true);
-                    setEmail('customer@fashionstore.com');
-                    setPassword('customer123');
-                    setName('សុខា ចាន់ (Sokha Chan)');
-                  }}
-                >
-                  ({t.autofillBtn})
-                </button>
-              </div>
-              <div>
-                {mode === 'login' ? (
-                  <>
-                    {t.noAccountPrompt}{' '}
-                    <button
-                      type="button"
-                      className="auth-quick-link"
-                      onClick={() => setMode('register')}
-                    >
-                      {t.registerLink}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {t.hasAccountPrompt}{' '}
-                    <button
-                      type="button"
-                      className="auth-quick-link"
-                      onClick={() => setMode('login')}
-                    >
-                      {t.loginLink}
-                    </button>
-                  </>
-                )}
-              </div>
+          {/* Link between Login and Register for Customer */}
+          {roleTab === 'customer' && (
+            <div className="auth-quick-hint" style={{ textAlign: 'center', marginTop: 12 }}>
+              {mode === 'login' ? (
+                <>
+                  {t.noAccountPrompt}{' '}
+                  <button
+                    type="button"
+                    className="auth-quick-link"
+                    onClick={() => setMode('register')}
+                  >
+                    {t.registerLink}
+                  </button>
+                </>
+              ) : (
+                <>
+                  {t.hasAccountPrompt}{' '}
+                  <button
+                    type="button"
+                    className="auth-quick-link"
+                    onClick={() => setMode('login')}
+                  >
+                    {t.loginLink}
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
