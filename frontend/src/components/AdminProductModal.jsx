@@ -292,27 +292,26 @@ export default function AdminProductModal({ open, editingProduct, existingSkus, 
 
               {/* Storefront Display Grids */}
               <div className="luxury-grid-picker-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
-                  <div>
-                    <div className="luxury-grid-picker-title">✨ {t.gridPickerTitle}</div>
-                    <div className="luxury-grid-picker-sub">{t.gridPickerSub}</div>
-                  </div>
-                  <div className="grid-preset-bar luxury-segmented-pill">
-                    {[
-                      { id: 'scroll', label: t.presetScrollOnly },
-                      { id: 'normal', label: t.presetNormalOnly },
-                      { id: 'both', label: t.presetBoth },
-                    ].map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        className={`grid-preset-btn ${activePreset === preset.id ? 'is-active' : ''}`}
-                        onClick={() => applyPreset(preset.id)}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
+                <div style={{ marginBottom: 10 }}>
+                  <div className="luxury-grid-picker-title">✨ {t.gridPickerTitle}</div>
+                  <div className="luxury-grid-picker-sub">{t.gridPickerSub}</div>
+                </div>
+
+                <div className="grid-preset-bar luxury-segmented-pill" style={{ marginBottom: 10 }}>
+                  {[
+                    { id: 'scroll', label: t.presetScrollOnly },
+                    { id: 'normal', label: t.presetNormalOnly },
+                    { id: 'both', label: t.presetBoth },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      className={`grid-preset-btn ${activePreset === preset.id ? 'is-active' : ''}`}
+                      onClick={() => applyPreset(preset.id)}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="grid-choice-cards luxury-grid-choices">
