@@ -454,12 +454,31 @@ Route::prefix('v1')->group(function (): void {
 
                     $file = $request->file('image');
                     $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                    $path = $file->storeAs('uploads', $filename, 'public');
+
+                    // Save directly to public/uploads for instant web server serving
+                    $publicDir = public_path('uploads');
+                    if (! is_dir($publicDir)) {
+                        @mkdir($publicDir, 0777, true);
+                    }
+
+                    // Also save copy in storage/app/public/uploads for persistent storage
+                    $storageDir = storage_path('app/public/uploads');
+                    if (! is_dir($storageDir)) {
+                        @mkdir($storageDir, 0777, true);
+                    }
+
+                    // Move to public/uploads
+                    $file->move($publicDir, $filename);
+
+                    // Backup copy to storage/app/public/uploads
+                    @copy($publicDir.DIRECTORY_SEPARATOR.$filename, $storageDir.DIRECTORY_SEPARATOR.$filename);
+
+                    $relativeUrl = '/uploads/'.$filename;
 
                     return response()->json([
                         'message' => 'Image uploaded successfully.',
-                        'url' => asset('storage/'.$path),
-                        'path' => $path,
+                        'url' => $relativeUrl,
+                        'path' => $relativeUrl,
                     ]);
                 })->name('upload');
 

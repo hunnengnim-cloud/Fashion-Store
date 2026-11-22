@@ -42,8 +42,11 @@ RUN mkdir -p /var/www/storage/framework/cache/data \
              /var/www/storage/framework/sessions \
              /var/www/storage/framework/views \
              /var/www/storage/logs \
+             /var/www/storage/app/public/uploads \
+             /var/www/public/uploads \
+             /var/www/public/avatars \
              /var/www/bootstrap/cache \
-    && chmod -R 777 /var/www/storage /var/www/bootstrap/cache
+    && chmod -R 777 /var/www/storage /var/www/public/uploads /var/www/public/avatars /var/www/bootstrap/cache
 
 EXPOSE 10000
 
@@ -51,6 +54,7 @@ EXPOSE 10000
 CMD sh -c "\
     if [ -z \"\$APP_KEY\" ]; then export APP_KEY=\"base64:75WSEAs0S+DK1FMABurulhDtMo5tVV+qPV4z1ShSKJI=\"; fi && \
     php artisan config:clear && \
+    (php artisan storage:link || true) && \
     (php artisan migrate --force || true) && \
     (php artisan db:seed --class=RolesAndPermissionsSeeder --force || true) && \
     (php artisan db:seed --class=AdminUserSeeder --force || true) && \

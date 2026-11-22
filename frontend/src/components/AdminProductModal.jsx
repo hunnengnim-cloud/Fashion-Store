@@ -95,6 +95,8 @@ export default function AdminProductModal({ open, editingProduct, existingSkus, 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Immediately display local preview so user sees the image right away
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') setImage(reader.result);
@@ -103,10 +105,16 @@ export default function AdminProductModal({ open, editingProduct, existingSkus, 
 
     const formData = new FormData();
     formData.append('image', file);
-    const res = await api.upload('/admin/upload', formData);
-    if (res.ok && res.data?.url) {
-      setImage(res.data.url);
-      notify('Image uploaded to server storage.', 'success', 2000);
+    try {
+      const res = await api.upload('/admin/upload', formData);
+      if (res.ok && res.data?.url) {
+        setImage(res.data.url);
+        notify(currentLang === 'km' ? 'បានបង្ហោះរូបភាពដោយជោគជ័យ!' : 'Image uploaded to server storage.', 'success', 2000);
+      } else {
+        notify(res.data?.message || (currentLang === 'km' ? 'មិនអាចបង្ហោះរូបភាពបានទេ' : 'Upload failed.'), 'warning', 2500);
+      }
+    } catch {
+      notify(currentLang === 'km' ? 'កំហុសបណ្តាញពេលបង្ហោះ' : 'Upload error.', 'error', 2500);
     }
   };
 
@@ -337,7 +345,15 @@ export default function AdminProductModal({ open, editingProduct, existingSkus, 
                 }}
               >
                 {image ? (
-                  <img src={image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img
+                    src={image}
+                    alt="Preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80';
+                    }}
+                  />
                 ) : (
                   <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 10, lineHeight: 1.2 }}>
                     <div style={{ fontSize: 20, marginBottom: 2, opacity: 0.6 }}>🖼️</div>
