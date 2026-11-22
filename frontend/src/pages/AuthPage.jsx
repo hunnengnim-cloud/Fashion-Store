@@ -70,7 +70,7 @@ const T = {
     adminBlockedRegister: 'New account creation is strictly for Customers only. Admin account is unique.',
     customerCreatedFail: 'Could not create account. Please check your details.',
     signInWithGoogle: 'Continue with Google',
-    orDivider: 'Or continue with email',
+    orDivider: 'Or continue with Google',
     googleConnectTitle: 'Sign in with Google / Real Email',
     googleModalSubtitle: 'Direct verification with a secure 6-digit code sent to your real email inbox.',
     googleAccountPrompt: 'Real Gmail or Email Address *',
@@ -166,7 +166,7 @@ const T = {
     adminBlockedRegister: 'ការចុះឈ្មោះគឺសម្រាប់តែអតិថិជនប៉ុណ្ណោះ។ គណនីអ្នកគ្រប់គ្រងមានតែមួយគត់។',
     customerCreatedFail: 'មិនអាចបង្កើតគណនីបានឡើយ។ សូមពិនិត្យមើលព័ត៌មានរបស់អ្នកឡើងវិញ។',
     signInWithGoogle: 'ចូលគណនីជាមួយ Google',
-    orDivider: 'ឬបន្តជាមួយអ៊ីមែល',
+    orDivider: 'ឬចូលតាមរយៈ Google',
     googleConnectTitle: 'ចូលគណនីជាមួយ Google',
     googleModalSubtitle: 'ផ្ទៀងផ្ទាត់ដោយផ្ទាល់តាមរយៈលេខកូដសម្ងាត់ ៦ ខ្ទង់ផ្ញើទៅកាន់ Email របស់អ្នក។',
     googleAccountPrompt: 'អាសយដ្ឋាន Gmail *',
@@ -586,14 +586,13 @@ export default function AuthPage({ onNavigate }) {
             className="auth-pane-brand"
             onClick={() => onNavigate('/')}
             title={lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Return to Home'}
-            style={lang === 'km' ? { fontFamily: "'Kantumruy Pro', 'Battambang', sans-serif", fontWeight: 700, fontSize: 24 } : undefined}
           >
-            {t.brandName}<span>.</span>
+            Fashion Store<span>.</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Language Switcher */}
-            <div className="auth-lang-switch" role="group" aria-label="Select Language">
+          <div className="auth-pane-actions">
+            {/* Desktop Dual Switcher (> 1024px) */}
+            <div className="auth-lang-desktop auth-lang-switch" role="group" aria-label="Select Language">
               <button
                 type="button"
                 className={`auth-lang-btn ${lang === 'km' ? 'is-active' : ''}`}
@@ -616,13 +615,36 @@ export default function AuthPage({ onNavigate }) {
               </button>
             </div>
 
+            {/* Mobile Single Compact Pill (<= 1024px, Photo 2 Style) */}
+            <button
+              type="button"
+              className="auth-lang-mobile"
+              onClick={() => handleLangChange(lang === 'km' ? 'en' : 'km')}
+              title={lang === 'km' ? 'Switch to English' : 'ប្ដូរទៅភាសាខ្មែរ'}
+              aria-label="Toggle Language"
+            >
+              {lang === 'km' ? (
+                <>
+                  <CambodiaFlagIcon size={15} />
+                  <span>KM</span>
+                </>
+              ) : (
+                <>
+                  <UkFlagIcon size={15} />
+                  <span>EN</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               className="auth-pane-back-link"
               onClick={() => onNavigate('/')}
+              title={t.backToShop}
             >
               <ArrowLeftIcon size={14} />
-              <span>{t.backToShop}</span>
+              <span className="auth-back-text-desktop">{t.backToShop}</span>
+              <span className="auth-back-text-mobile">{lang === 'km' ? 'ដើម' : 'Home'}</span>
             </button>
           </div>
         </div>
