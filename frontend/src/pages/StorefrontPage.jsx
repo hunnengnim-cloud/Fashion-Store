@@ -614,7 +614,7 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
                 </button>
               </div>
 
-              {/* Mobile Single Compact Toggle Pill */}
+              {/* Mobile Single Compact Toggle Pill - Photo 2 Style */}
               <button
                 type="button"
                 className="nav-lang-mobile"
@@ -624,12 +624,12 @@ export default function StorefrontPage({ initialCategory = 'all', theme, onToggl
               >
                 {lang === 'km' ? (
                   <>
-                    <CambodiaFlagIcon size={14} />
-                    <span>ខ្មែរ</span>
+                    <CambodiaFlagIcon size={15} />
+                    <span>KM</span>
                   </>
                 ) : (
                   <>
-                    <UkFlagIcon size={14} />
+                    <UkFlagIcon size={15} />
                     <span>EN</span>
                   </>
                 )}

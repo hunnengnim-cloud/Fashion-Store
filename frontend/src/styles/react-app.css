@@ -6114,10 +6114,52 @@ body,
 
 .nav-lang-mobile {
   display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(200, 169, 106, 0.45);
+  background: var(--card-bg, #ffffff);
+  color: var(--text-primary, #1e293b);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-lang-mobile:hover,
+.nav-lang-mobile:active {
+  border-color: #c5a059;
+  background: rgba(200, 169, 106, 0.08);
+}
+
+[data-theme="dark"] .nav-lang-mobile {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  border-color: rgba(200, 169, 106, 0.4);
 }
 
 .nav-signin-mobile {
   display: none;
+}
+
+/* ── Screen Widths <= 1024px: Switch to Photo 2 Compact Pill for All Phones & Tablets ── */
+@media (max-width: 1024px) {
+  .nav-lang-desktop {
+    display: none !important;
+  }
+
+  .nav-lang-mobile {
+    display: inline-flex !important;
+  }
 }
 
 /* ── Mobile Viewport Overrides (Tablets & Phones <= 768px) ── */
@@ -6148,19 +6190,6 @@ body,
 
   .nav-lang-mobile {
     display: inline-flex !important;
-    align-items: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 8px;
-    border-radius: 999px;
-    border: 1.5px solid rgba(200, 169, 106, 0.45);
-    background: var(--card-bg, #ffffff);
-    color: var(--text-primary);
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    white-space: nowrap;
   }
 
   .nav-signin-desktop {
@@ -6378,6 +6407,41 @@ body,
     height: 175px !important;
   }
 }
+
+/* ── Ultra-Compact Mobile Phones (<= 420px): Ultra-Precise Fitting ── */
+@media (max-width: 420px) {
+  .navbar-inner {
+    padding: 6px 10px !important;
+    gap: 4px !important;
+  }
+
+  .nav-brand {
+    font-size: 15.5px !important;
+  }
+
+  .nav-actions {
+    gap: 4px !important;
+  }
+
+  .nav-lang-mobile {
+    height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    gap: 4px !important;
+  }
+
+  .nav-icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .nav-signin-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    height: 30px !important;
+  }
+}
+
 
 
 
