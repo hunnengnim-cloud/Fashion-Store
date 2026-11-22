@@ -289,39 +289,53 @@ export default function AuthPage({ onNavigate }) {
     }
 
     try {
+      setGoogleLoading(true);
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: 'email profile openid',
         callback: async (tokenResponse) => {
           if (tokenResponse?.access_token) {
-            setGoogleLoading(true);
-            const res = await api.post(
-              '/auth/google',
-              {
-                access_token: tokenResponse.access_token,
-                device_name: 'react_web',
-              },
-              false
-            );
-            setGoogleLoading(false);
-            if (res.ok && res.data?.data?.token) {
-              const { token, user } = res.data.data;
-              setAuth(token, user);
-              notify(`${t.toastWelcome}${user.name}!`, 'success');
-              onNavigate('/');
-              return;
+            try {
+              const res = await api.post(
+                '/auth/google',
+                {
+                  access_token: tokenResponse.access_token,
+                  device_name: 'react_web',
+                },
+                false
+              );
+              setGoogleLoading(false);
+              if (res.ok && res.data?.data?.token) {
+                const { token, user } = res.data.data;
+                setAuth(token, user);
+                notify(
+                  lang === 'km'
+                    ? `🎉 ចូលគណនី Google ជោគជ័យ៖ ${user.name} (${user.email})!`
+                    : `🎉 Signed in with Google: ${user.name}!`,
+                  'success',
+                  4000
+                );
+                onNavigate('/');
+                return;
+              }
+              notify(res.data?.message || (lang === 'km' ? 'ការផ្ទៀងផ្ទាត់ Google មិនជោគជ័យ' : 'Google Authentication failed'), 'error');
+            } catch (err) {
+              setGoogleLoading(false);
+              notify(lang === 'km' ? 'មានបញ្ហាក្នុងការតភ្ជាប់ Google' : 'Google connection error', 'error');
             }
-            notify(res.data?.message || t.googleAuthFailed, 'error');
+          } else {
+            setGoogleLoading(false);
           }
         },
         error_callback: (err) => {
+          setGoogleLoading(false);
           console.warn('Google TokenClient error:', err);
-          // When Google popup is blocked or origin not allowed, open real Google email sheet seamlessly
           setShowGoogleModal(true);
         },
       });
       client.requestAccessToken();
     } catch (err) {
+      setGoogleLoading(false);
       console.warn('GIS error:', err);
       setShowGoogleModal(true);
     }
@@ -332,8 +346,12 @@ export default function AuthPage({ onNavigate }) {
   const [googleEmail, setGoogleEmail] = useState('');
 
   const handleGoogleSignInClick = () => {
-    // Open the instant Real Google Email Sign-In sheet directly so users are NEVER blocked by Error 400: origin_mismatch!
-    setShowGoogleModal(true);
+    const clientId = getValidGoogleClientId();
+    if (window.google?.accounts?.oauth2) {
+      launchGoogleOAuth(clientId);
+    } else {
+      setShowGoogleModal(true);
+    }
   };
 
   const handleGoogleInstantLogin = async (customName, customEmail) => {
