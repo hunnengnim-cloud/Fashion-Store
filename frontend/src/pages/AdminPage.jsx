@@ -836,7 +836,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                 title="ប្ដូរទៅភាសាខ្មែរ (Khmer)"
               >
                 <CambodiaFlagIcon size={16} />
-                <span>ភាសាខ្មែរ</span>
+                <span>ខ្មែរ</span>
               </button>
               <button
                 type="button"
@@ -860,7 +860,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                 title="Switch to English"
               >
                 <UkFlagIcon size={16} />
-                <span>English</span>
+                <span>EN</span>
               </button>
             </div>
 
