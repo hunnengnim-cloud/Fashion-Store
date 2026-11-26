@@ -13,6 +13,7 @@ import {
   DEFAULT_LAYOUT,
   formatKHR,
   formatUSD,
+  getInventoryMovements,
   getLang,
   getOrders,
   getProducts,
@@ -23,7 +24,9 @@ import {
   isInScrollBox,
   KEYS,
   notify,
+  recordInventoryMovement,
   resetStorefrontLayout,
+  saveInventoryMovements,
   saveLang,
   saveOrders,
   saveProducts,
@@ -151,6 +154,28 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
   });
   const [savingStore, setSavingStore] = useState(false);
 
+  // ── Inventory Management States (Stock In, Stock Out, Transfer, Return) ──
+  const [invSubTab, setInvSubTab] = useState('catalog'); // 'catalog' | 'movements'
+  const [invMovements, setInvMovements] = useState(() => getInventoryMovements());
+  const [invMovementFilter, setInvMovementFilter] = useState('all');
+  const [invSearch, setInvSearch] = useState('');
+  const [invCategoryFilter, setInvCategoryFilter] = useState('all');
+  const [invHealthFilter, setInvHealthFilter] = useState('all');
+
+  // Inventory Operation Modal
+  const [invModalOpen, setInvModalOpen] = useState(false);
+  const [invOperationType, setInvOperationType] = useState('stock_in'); // 'stock_in' | 'stock_out' | 'transfer' | 'return'
+  const [invSelectedSku, setInvSelectedSku] = useState('');
+  const [invQty, setInvQty] = useState(10);
+  const [invSupplier, setInvSupplier] = useState('');
+  const [invUnitCost, setInvUnitCost] = useState('');
+  const [invReason, setInvReason] = useState('');
+  const [invRef, setInvRef] = useState('');
+  const [invFromLocation, setInvFromLocation] = useState('ឃ្លាំងកណ្តាល (Central Warehouse)');
+  const [invToLocation, setInvToLocation] = useState('ហាងលក់រាយ (Retail Boutique)');
+  const [invCondition, setInvCondition] = useState('Perfect (គុណភាពល្អឥតខ្ចោះ)');
+  const [invNotes, setInvNotes] = useState('');
+
   const adminAuthorized = isAdminUser(user);
 
   useEffect(() => {
@@ -166,6 +191,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     };
     window.addEventListener('storage', syncStorage);
     window.addEventListener('fashionstore:orders', () => setOrders(getOrders()));
+    window.addEventListener('fashionstore:inventoryMovements', () => setInvMovements(getInventoryMovements()));
     window.addEventListener('fashionstore:auth', () => setUser(getUser()));
     return () => window.removeEventListener('storage', syncStorage);
   }, []);
@@ -238,6 +264,54 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
       return matchQ && matchStatus;
     });
   }, [orders, orderSearch, orderStatusFilter]);
+
+  const filteredInventoryProducts = useMemo(() => {
+    const q = invSearch.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchQ =
+        !q ||
+        p.name?.toLowerCase().includes(q) ||
+        p.sku?.toLowerCase().includes(q) ||
+        (p.brand || '').toLowerCase().includes(q);
+      const matchCat = invCategoryFilter === 'all' || p.cat === invCategoryFilter;
+      const stockNum = Number(p.stock) || 0;
+      let matchHealth = true;
+      if (invHealthFilter === 'healthy') matchHealth = stockNum > 10;
+      else if (invHealthFilter === 'low') matchHealth = stockNum > 0 && stockNum <= 10;
+      else if (invHealthFilter === 'out') matchHealth = stockNum === 0;
+      return matchQ && matchCat && matchHealth;
+    });
+  }, [products, invSearch, invCategoryFilter, invHealthFilter]);
+
+  const filteredInventoryMovements = useMemo(() => {
+    return invMovements.filter((m) => {
+      if (invMovementFilter === 'all') return true;
+      return m.type === invMovementFilter;
+    });
+  }, [invMovements, invMovementFilter]);
+
+  const inventorySummary = useMemo(() => {
+    const totalUnits = products.reduce((s, p) => s + (Number(p.stock) || 0), 0);
+    const healthyCount = products.filter((p) => (Number(p.stock) || 0) > 10).length;
+    const lowStockCount = products.filter((p) => (Number(p.stock) || 0) > 0 && (Number(p.stock) || 0) <= 10).length;
+    const outOfStockCount = products.filter((p) => (Number(p.stock) || 0) === 0).length;
+
+    const inCount = invMovements.filter((m) => m.type === 'stock_in').reduce((s, m) => s + Math.abs(Number(m.qty || m.quantity_change) || 0), 0);
+    const outCount = invMovements.filter((m) => m.type === 'stock_out').reduce((s, m) => s + Math.abs(Number(m.qty || m.quantity_change) || 0), 0);
+    const transferCount = invMovements.filter((m) => m.type === 'transfer').reduce((s, m) => s + Math.abs(Number(m.qty || m.quantity_change) || 0), 0);
+    const returnCount = invMovements.filter((m) => m.type === 'return').reduce((s, m) => s + Math.abs(Number(m.qty || m.quantity_change) || 0), 0);
+
+    return {
+      totalUnits,
+      healthyCount,
+      lowStockCount,
+      outOfStockCount,
+      inCount,
+      outCount,
+      transferCount,
+      returnCount,
+    };
+  }, [products, invMovements]);
 
   const topSellingProducts = useMemo(() => {
     return [...products]
@@ -433,13 +507,131 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
   };
 
   const adjustInventoryStock = (sku, deltaOrExact, isExact = false) => {
+    let oldStock = 0;
+    let newStock = 0;
+    let prodName = sku;
+    let prodImg = '';
+
     const updated = products.map((p) => {
       if (p.sku !== sku) return p;
-      const nextStock = isExact ? Math.max(0, Number(deltaOrExact) || 0) : Math.max(0, (Number(p.stock) || 0) + deltaOrExact);
-      return { ...p, stock: nextStock };
+      oldStock = Number(p.stock) || 0;
+      prodName = p.name;
+      prodImg = p.image;
+      newStock = isExact ? Math.max(0, Number(deltaOrExact) || 0) : Math.max(0, (Number(p.stock) || 0) + deltaOrExact);
+      return { ...p, stock: newStock };
     });
     setProducts(updated);
     saveProducts(updated);
+
+    // Record quick movement if changed
+    if (newStock !== oldStock) {
+      const diff = newStock - oldStock;
+      recordInventoryMovement({
+        type: diff > 0 ? 'stock_in' : 'stock_out',
+        sku,
+        productName: prodName,
+        productImage: prodImg,
+        qty: Math.abs(diff),
+        stockBefore: oldStock,
+        stockAfter: newStock,
+        reference: `ADJ-${Date.now().toString().slice(-6)}`,
+        location: 'Storefront Shelf',
+        reason: lang === 'km' ? 'កែសម្រួលរហ័ស (Quick Adjustment)' : 'Quick Adjustment',
+        user: user?.name || 'AdminStore',
+      });
+      setInvMovements(getInventoryMovements());
+    }
+  };
+
+  const handleOpenInventoryModal = (opType = 'stock_in', sku = '') => {
+    setInvOperationType(opType);
+    setInvSelectedSku(sku || (products[0]?.sku || ''));
+    setInvQty(10);
+    setInvSupplier('');
+    setInvUnitCost('');
+    setInvReason('');
+    setInvRef('');
+    setInvNotes('');
+    setInvModalOpen(true);
+  };
+
+  const handleSubmitInventoryOperation = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const targetProd = products.find((p) => p.sku === invSelectedSku);
+    if (!targetProd) {
+      notify(lang === 'km' ? 'សូមជ្រើសរើសផលិតផល' : 'Please select a product', 'error');
+      return;
+    }
+
+    const qtyNum = Math.max(1, parseInt(invQty, 10) || 1);
+    const currentStock = Number(targetProd.stock) || 0;
+    let nextStock = currentStock;
+
+    if (invOperationType === 'stock_in') {
+      nextStock = currentStock + qtyNum;
+    } else if (invOperationType === 'stock_out') {
+      if (currentStock < qtyNum) {
+        notify(
+          lang === 'km'
+            ? `ស្តុកមិនគ្រប់គ្រាន់ទេ! ស្តុកបច្ចុប្បន្នមានតែ ${currentStock}`
+            : `Insufficient stock! Current stock is only ${currentStock}`,
+          'error'
+        );
+        return;
+      }
+      nextStock = Math.max(0, currentStock - qtyNum);
+    } else if (invOperationType === 'transfer') {
+      if (currentStock < qtyNum) {
+        notify(
+          lang === 'km'
+            ? `ស្តុកមិនគ្រប់គ្រាន់សម្រាប់ផ្ទេរទេ! ស្តុកបច្ចុប្បន្នមាន ${currentStock}`
+            : `Insufficient stock to transfer! Current stock is ${currentStock}`,
+          'error'
+        );
+        return;
+      }
+    } else if (invOperationType === 'return') {
+      nextStock = currentStock + qtyNum;
+    }
+
+    const updatedProducts = products.map((p) => (p.sku === invSelectedSku ? { ...p, stock: nextStock } : p));
+    setProducts(updatedProducts);
+    saveProducts(updatedProducts);
+
+    const record = {
+      type: invOperationType,
+      sku: targetProd.sku,
+      productName: targetProd.name,
+      productImage: targetProd.image,
+      qty: qtyNum,
+      stockBefore: currentStock,
+      stockAfter: nextStock,
+      reference: invRef || `${invOperationType.toUpperCase().slice(0, 3)}-${Date.now().toString().slice(-6)}`,
+      location: invOperationType === 'transfer' ? `${invFromLocation} → ${invToLocation}` : invSupplier || invFromLocation,
+      reason: invReason || invNotes || (invOperationType === 'stock_in' ? 'Restock' : invOperationType === 'stock_out' ? 'Dispatch' : invOperationType === 'transfer' ? 'Warehouse Transfer' : 'Customer Return'),
+      notes: invNotes,
+      user: user?.name || 'AdminStore',
+    };
+
+    const nextMovements = recordInventoryMovement(record);
+    setInvMovements(nextMovements);
+
+    const opNames = {
+      stock_in: lang === 'km' ? 'នាំចូលស្តុក' : 'Stock In',
+      stock_out: lang === 'km' ? 'នាំចេញស្តុក' : 'Stock Out',
+      transfer: lang === 'km' ? 'ផ្ទេរស្តុក' : 'Transfer',
+      return: lang === 'km' ? 'បង្វិលចូលស្តុក' : 'Return',
+    };
+
+    notify(
+      lang === 'km'
+        ? `✓ បានកត់ត្រា${opNames[invOperationType]}ចំនួន ${qtyNum} សម្រាប់ ${targetProd.name} ជោគជ័យ!`
+        : `✓ ${opNames[invOperationType]} of ${qtyNum} units for ${targetProd.name} recorded!`,
+      'success',
+      3000
+    );
+
+    setInvModalOpen(false);
   };
 
   const updateOrderStatus = async (orderNum, nextStatus, extra = {}) => {
@@ -2013,13 +2205,13 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
           {activeTab === 'inventory' && (
             <div>
               {/* Inventory Health Summary */}
-              <div className="react-kpi-grid" style={{ marginBottom: 18 }}>
+              <div className="react-kpi-grid" style={{ marginBottom: 20 }}>
                 <div className="admin-kpi-modern">
                   <div className="admin-kpi-head">
                     <span className="admin-kpi-label">{t.inventory.totalUnits}</span>
                     <div className="admin-kpi-icon-wrap">🏷️</div>
                   </div>
-                  <div className="admin-kpi-val">{products.reduce((s, p) => s + (Number(p.stock) || 0), 0)}</div>
+                  <div className="admin-kpi-val">{inventorySummary.totalUnits}</div>
                   <div className="admin-kpi-sub">{t.inventory.acrossCatalog.replace('{count}', products.length)}</div>
                 </div>
 
@@ -2029,7 +2221,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                     <div className="admin-kpi-icon-wrap" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#059669', borderColor: 'rgba(16, 185, 129, 0.25)' }}>✓</div>
                   </div>
                   <div className="admin-kpi-val" style={{ color: '#059669' }}>
-                    {products.filter((p) => (Number(p.stock) || 0) > 10).length}
+                    {inventorySummary.healthyCount}
                   </div>
                   <div className="admin-kpi-sub">{t.inventory.healthySub}</div>
                 </div>
@@ -2040,7 +2232,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                     <div className="admin-kpi-icon-wrap" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706', borderColor: 'rgba(245, 158, 11, 0.25)' }}>⚠️</div>
                   </div>
                   <div className="admin-kpi-val" style={{ color: '#d97706' }}>
-                    {products.filter((p) => (Number(p.stock) || 0) > 0 && (Number(p.stock) || 0) <= 10).length}
+                    {inventorySummary.lowStockCount}
                   </div>
                   <div className="admin-kpi-sub">{t.inventory.lowStockSub}</div>
                 </div>
@@ -2051,122 +2243,476 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                     <div className="admin-kpi-icon-wrap" style={{ background: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', borderColor: 'rgba(239, 68, 68, 0.25)' }}>✕</div>
                   </div>
                   <div className="admin-kpi-val" style={{ color: '#dc2626' }}>
-                    {products.filter((p) => (Number(p.stock) || 0) === 0).length}
+                    {inventorySummary.outOfStockCount}
                   </div>
                   <div className="admin-kpi-sub">{t.inventory.outOfStockSub}</div>
                 </div>
               </div>
 
-              <div className="react-card">
-                <h3 style={{ margin: '0 0 14px' }}>{t.inventory.stockAdjustmentTitle}</h3>
-                <div style={{ overflowX: 'auto' }}>
-                  <table className="react-table">
-                    <thead>
-                      <tr>
-                        <th>{t.inventory.colProduct}</th>
-                        <th>{t.inventory.colCategory}</th>
-                        <th>{t.inventory.colCurrentUnits}</th>
-                        <th>{t.inventory.colHealth}</th>
-                        <th>{t.inventory.colQuickAdjust}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((p) => (
-                        <tr key={p.sku}>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <img src={p.image} alt={p.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }} />
-                              <div>
-                                <div style={{ fontWeight: 700 }}>{p.name}</div>
-                                <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)' }}>{p.sku}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="badge badge-gray" style={{ borderRadius: 999, padding: '4px 10px', fontSize: 11.5 }}>
-                              {p.cat === "Men's" ? (lang === 'km' ? 'បុរស' : "Men's") : p.cat === "Women's" ? (lang === 'km' ? 'នារី' : "Women's") : p.cat === 'Kids' ? (lang === 'km' ? 'កុមារ' : 'Kids') : p.cat === 'Shoes' ? (lang === 'km' ? 'ស្បែកជើង' : 'Shoes') : (lang === 'km' ? 'គ្រឿងតុបតែង' : p.cat)}
-                            </span>
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              min="0"
-                              className="form-control luxury-input-pill"
-                              value={p.stock || 0}
-                              onChange={(e) => adjustInventoryStock(p.sku, e.target.value, true)}
-                              style={{ width: 88, height: 34, fontWeight: 700, textAlign: 'center' }}
-                            />
-                          </td>
-                          <td>
-                            <span className={`stock-pill-health ${p.stock === 0 ? 'is-danger' : p.stock <= 5 ? 'is-warning' : 'is-healthy'}`}>
-                              <span className="stock-dot" />
-                              <span>{p.stock === 0 ? t.inventory.outStock : p.stock <= 5 ? t.inventory.lowStock : t.inventory.optimal}</span>
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <button
-                                type="button"
-                                className="table-action-pill is-delete"
-                                style={{ width: 34, height: 30, padding: 0, fontSize: 11, fontWeight: 700 }}
-                                onClick={() => adjustInventoryStock(p.sku, -5)}
-                                title="-5 units"
-                              >
-                                -5
-                              </button>
-                              <button
-                                type="button"
-                                className="table-action-pill is-delete"
-                                style={{ width: 34, height: 30, padding: 0, fontSize: 11, fontWeight: 700 }}
-                                onClick={() => adjustInventoryStock(p.sku, -1)}
-                                title="-1 unit"
-                              >
-                                -1
-                              </button>
-                              <button
-                                type="button"
-                                className="table-action-pill"
-                                style={{
-                                  width: 34,
-                                  height: 30,
-                                  padding: 0,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  background: 'rgba(16, 185, 129, 0.08)',
-                                  color: '#059669',
-                                  border: '1.5px solid rgba(16, 185, 129, 0.3)',
-                                }}
-                                onClick={() => adjustInventoryStock(p.sku, 1)}
-                                title="+1 unit"
-                              >
-                                +1
-                              </button>
-                              <button
-                                type="button"
-                                className="table-action-pill"
-                                style={{
-                                  width: 34,
-                                  height: 30,
-                                  padding: 0,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  background: 'rgba(16, 185, 129, 0.08)',
-                                  color: '#059669',
-                                  border: '1.5px solid rgba(16, 185, 129, 0.3)',
-                                }}
-                                onClick={() => adjustInventoryStock(p.sku, 5)}
-                                title="+5 units"
-                              >
-                                +5
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* 4 Core Inventory Operations Hero Grid */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      ⚡ {t.inventory.heroOpsTitle}
+                    </h3>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {t.inventory.heroOpsSub}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="inv-operations-grid">
+                  {/* Stock In Card */}
+                  <div className="inv-op-card stock-in" onClick={() => handleOpenInventoryModal('stock_in')}>
+                    <div className="inv-op-icon">📥</div>
+                    <div className="inv-op-title">{lang === 'km' ? 'នាំចូលស្តុក' : 'Stock In'}</div>
+                    <div className="inv-op-desc">
+                      {lang === 'km' ? 'បន្ថែមទំនិញថ្មី និងកត់ត្រាពីអ្នកផ្គត់ផ្គង់' : 'Restock catalog from suppliers or shipments'}
+                    </div>
+                    <div className="inv-op-stat">
+                      +{inventorySummary.inCount} {lang === 'km' ? 'ឯកតានាំចូល' : 'units received'}
+                    </div>
+                    <button type="button" className="inv-op-btn" onClick={(e) => { e.stopPropagation(); handleOpenInventoryModal('stock_in'); }}>
+                      {t.inventory.btnStockIn}
+                    </button>
+                  </div>
+
+                  {/* Stock Out Card */}
+                  <div className="inv-op-card stock-out" onClick={() => handleOpenInventoryModal('stock_out')}>
+                    <div className="inv-op-icon">📤</div>
+                    <div className="inv-op-title">{lang === 'km' ? 'នាំចេញស្តុក' : 'Stock Out'}</div>
+                    <div className="inv-op-desc">
+                      {lang === 'km' ? 'កាត់ស្តុកចេញសម្រាប់លក់ ឬខូចខាត' : 'Deduct units for wholesale, loss or damage'}
+                    </div>
+                    <div className="inv-op-stat">
+                      -{inventorySummary.outCount} {lang === 'km' ? 'ឯកតានាំចេញ' : 'units deducted'}
+                    </div>
+                    <button type="button" className="inv-op-btn" onClick={(e) => { e.stopPropagation(); handleOpenInventoryModal('stock_out'); }}>
+                      {t.inventory.btnStockOut}
+                    </button>
+                  </div>
+
+                  {/* Transfer Card */}
+                  <div className="inv-op-card transfer" onClick={() => handleOpenInventoryModal('transfer')}>
+                    <div className="inv-op-icon">🔄</div>
+                    <div className="inv-op-title">{lang === 'km' ? 'ផ្ទេរស្តុក' : 'Stock Transfer'}</div>
+                    <div className="inv-op-desc">
+                      {lang === 'km' ? 'ផ្ទេររវាងឃ្លាំងកណ្តាល និងហាងលក់រាយ' : 'Relocate goods between warehouses or branches'}
+                    </div>
+                    <div className="inv-op-stat">
+                      {inventorySummary.transferCount} {lang === 'km' ? 'ឯកតាបានផ្ទេរ' : 'units relocated'}
+                    </div>
+                    <button type="button" className="inv-op-btn" onClick={(e) => { e.stopPropagation(); handleOpenInventoryModal('transfer'); }}>
+                      {t.inventory.btnTransfer}
+                    </button>
+                  </div>
+
+                  {/* Return Card */}
+                  <div className="inv-op-card return" onClick={() => handleOpenInventoryModal('return')}>
+                    <div className="inv-op-icon">↩️</div>
+                    <div className="inv-op-title">{lang === 'km' ? 'បង្វិលចូលស្តុក' : 'Stock Return'}</div>
+                    <div className="inv-op-desc">
+                      {lang === 'km' ? 'ទទួលទំនិញបង្វិលពីអតិថិជន និងត្រួតពិនិត្យ' : 'Process customer returns & inspect condition'}
+                    </div>
+                    <div className="inv-op-stat">
+                      +{inventorySummary.returnCount} {lang === 'km' ? 'ឯកតាបានបង្វិល' : 'units returned'}
+                    </div>
+                    <button type="button" className="inv-op-btn" onClick={(e) => { e.stopPropagation(); handleOpenInventoryModal('return'); }}>
+                      {t.inventory.btnReturn}
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Sub-tabs: Catalog vs Movement History */}
+              <div className="inv-subtabs-wrap">
+                <button
+                  type="button"
+                  className={`inv-subtab-btn ${invSubTab === 'catalog' ? 'active' : ''}`}
+                  onClick={() => setInvSubTab('catalog')}
+                >
+                  📦 {t.inventory.tabCatalog}
+                  <span className="inv-subtab-count">{filteredInventoryProducts.length}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`inv-subtab-btn ${invSubTab === 'movements' ? 'active' : ''}`}
+                  onClick={() => setInvSubTab('movements')}
+                >
+                  📜 {t.inventory.tabMovements}
+                  <span className="inv-subtab-count">{invMovements.length}</span>
+                </button>
+              </div>
+
+              {/* VIEW 1: Stock Catalog */}
+              {invSubTab === 'catalog' && (
+                <div className="react-card">
+                  {/* Search and Filters Bar */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', flex: 1 }}>
+                      <div style={{ position: 'relative', minWidth: 260, flex: 1 }}>
+                        <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', opacity: 0.6 }}>🔍</span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          style={{ paddingLeft: 38, height: 38, borderRadius: 999 }}
+                          placeholder={t.inventory.searchPlaceholder}
+                          value={invSearch}
+                          onChange={(e) => setInvSearch(e.target.value)}
+                        />
+                      </div>
+                      <select
+                        className="form-control"
+                        style={{ width: 'auto', minWidth: 140, height: 38, borderRadius: 999 }}
+                        value={invCategoryFilter}
+                        onChange={(e) => setInvCategoryFilter(e.target.value)}
+                      >
+                        <option value="all">{lang === 'km' ? 'គ្រប់ប្រភេទទាំងអស់' : 'All Categories'}</option>
+                        <option value="Men's">{lang === 'km' ? 'បុរស' : "Men's"}</option>
+                        <option value="Women's">{lang === 'km' ? 'នារី' : "Women's"}</option>
+                        <option value="Kids">{lang === 'km' ? 'កុមារ' : 'Kids'}</option>
+                        <option value="Shoes">{lang === 'km' ? 'ស្បែកជើង' : 'Shoes'}</option>
+                        <option value="Accessories">{lang === 'km' ? 'គ្រឿងតុបតែង' : 'Accessories'}</option>
+                      </select>
+                      <select
+                        className="form-control"
+                        style={{ width: 'auto', minWidth: 150, height: 38, borderRadius: 999 }}
+                        value={invHealthFilter}
+                        onChange={(e) => setInvHealthFilter(e.target.value)}
+                      >
+                        <option value="all">{t.inventory.filterAll}</option>
+                        <option value="healthy">{t.inventory.filterHealthy}</option>
+                        <option value="low">{t.inventory.filterLowStock}</option>
+                        <option value="out">{t.inventory.filterOutStock}</option>
+                      </select>
+                    </div>
+
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {lang === 'km' ? `បង្ហាញ ${filteredInventoryProducts.length} ក្នុងចំណោម ${products.length} មុខទំនិញ` : `Showing ${filteredInventoryProducts.length} of ${products.length} items`}
+                    </div>
+                  </div>
+
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="react-table">
+                      <thead>
+                        <tr>
+                          <th>{t.inventory.colProduct}</th>
+                          <th>{t.inventory.colCategory}</th>
+                          <th style={{ textAlign: 'center' }}>{t.inventory.colCurrentUnits}</th>
+                          <th>{t.inventory.colHealth}</th>
+                          <th style={{ textAlign: 'center' }}>{t.inventory.colQuickAdjust}</th>
+                          <th style={{ textAlign: 'center' }}>{lang === 'km' ? 'ប្រតិបត្តិការរហ័ស' : 'Operations'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredInventoryProducts.map((p) => (
+                          <tr key={p.sku}>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <img
+                                  src={p.image}
+                                  alt={p.name}
+                                  style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', border: '1px solid var(--border)' }}
+                                />
+                                <div>
+                                  <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{p.name}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                    <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)', background: 'var(--warm-gray)', padding: '1px 6px', borderRadius: 4 }}>
+                                      {p.sku}
+                                    </span>
+                                    {p.brand && (
+                                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>· {p.brand}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="badge badge-gray" style={{ borderRadius: 999, padding: '4px 10px', fontSize: 11.5 }}>
+                                {p.cat === "Men's" ? (lang === 'km' ? 'បុរស' : "Men's") : p.cat === "Women's" ? (lang === 'km' ? 'នារី' : "Women's") : p.cat === 'Kids' ? (lang === 'km' ? 'កុមារ' : 'Kids') : p.cat === 'Shoes' ? (lang === 'km' ? 'ស្បែកជើង' : 'Shoes') : (lang === 'km' ? 'គ្រឿងតុបតែង' : p.cat)}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <input
+                                type="number"
+                                min="0"
+                                className="form-control luxury-input-pill"
+                                value={p.stock || 0}
+                                onChange={(e) => adjustInventoryStock(p.sku, e.target.value, true)}
+                                style={{ width: 88, height: 34, fontWeight: 700, textAlign: 'center', margin: '0 auto' }}
+                              />
+                            </td>
+                            <td>
+                              <span className={`stock-pill-health ${p.stock === 0 ? 'is-danger' : p.stock <= 10 ? 'is-warning' : 'is-healthy'}`}>
+                                <span className="stock-dot" />
+                                <span>{p.stock === 0 ? t.inventory.outStock : p.stock <= 10 ? t.inventory.lowStock : t.inventory.optimal}</span>
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ display: 'inline-flex', gap: 5, justifyContent: 'center' }}>
+                                <button
+                                  type="button"
+                                  className="table-action-pill is-delete"
+                                  style={{ width: 32, height: 30, padding: 0, fontSize: 11, fontWeight: 700 }}
+                                  onClick={() => adjustInventoryStock(p.sku, -5)}
+                                  title="-5 units"
+                                >
+                                  -5
+                                </button>
+                                <button
+                                  type="button"
+                                  className="table-action-pill is-delete"
+                                  style={{ width: 32, height: 30, padding: 0, fontSize: 11, fontWeight: 700 }}
+                                  onClick={() => adjustInventoryStock(p.sku, -1)}
+                                  title="-1 unit"
+                                >
+                                  -1
+                                </button>
+                                <button
+                                  type="button"
+                                  className="table-action-pill"
+                                  style={{
+                                    width: 32,
+                                    height: 30,
+                                    padding: 0,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    background: 'rgba(16, 185, 129, 0.08)',
+                                    color: '#059669',
+                                    border: '1.5px solid rgba(16, 185, 129, 0.3)',
+                                  }}
+                                  onClick={() => adjustInventoryStock(p.sku, 1)}
+                                  title="+1 unit"
+                                >
+                                  +1
+                                </button>
+                                <button
+                                  type="button"
+                                  className="table-action-pill"
+                                  style={{
+                                    width: 32,
+                                    height: 30,
+                                    padding: 0,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    background: 'rgba(16, 185, 129, 0.08)',
+                                    color: '#059669',
+                                    border: '1.5px solid rgba(16, 185, 129, 0.3)',
+                                  }}
+                                  onClick={() => adjustInventoryStock(p.sku, 5)}
+                                  title="+5 units"
+                                >
+                                  +5
+                                </button>
+                              </div>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <div style={{ display: 'inline-flex', gap: 5, justifyContent: 'center' }}>
+                                <button
+                                  type="button"
+                                  className="inv-row-op-btn op-in"
+                                  onClick={() => handleOpenInventoryModal('stock_in', p.sku)}
+                                  title={lang === 'km' ? 'នាំចូលស្តុក' : 'Stock In'}
+                                >
+                                  📥 {lang === 'km' ? 'នាំចូល' : 'In'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="inv-row-op-btn op-out"
+                                  onClick={() => handleOpenInventoryModal('stock_out', p.sku)}
+                                  title={lang === 'km' ? 'នាំចេញស្តុក' : 'Stock Out'}
+                                >
+                                  📤 {lang === 'km' ? 'នាំចេញ' : 'Out'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="inv-row-op-btn op-transfer"
+                                  onClick={() => handleOpenInventoryModal('transfer', p.sku)}
+                                  title={lang === 'km' ? 'ផ្ទេរស្តុក' : 'Transfer'}
+                                >
+                                  🔄 {lang === 'km' ? 'ផ្ទេរ' : 'Transfer'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="inv-row-op-btn op-return"
+                                  onClick={() => handleOpenInventoryModal('return', p.sku)}
+                                  title={lang === 'km' ? 'បង្វិលចូលស្តុក' : 'Return'}
+                                >
+                                  ↩️ {lang === 'km' ? 'បង្វិល' : 'Return'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* VIEW 2: Movement History */}
+              {invSubTab === 'movements' && (
+                <div className="react-card">
+                  {/* Movement Type Filter Pills */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      <button
+                        type="button"
+                        className={`table-action-pill ${invMovementFilter === 'all' ? 'is-active' : ''}`}
+                        onClick={() => setInvMovementFilter('all')}
+                        style={invMovementFilter === 'all' ? { background: 'var(--primary)', color: '#fff', borderColor: 'var(--primary)' } : {}}
+                      >
+                        {lang === 'km' ? 'ទាំងអស់' : 'All'} ({invMovements.length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`table-action-pill ${invMovementFilter === 'stock_in' ? 'is-active' : ''}`}
+                        onClick={() => setInvMovementFilter('stock_in')}
+                        style={invMovementFilter === 'stock_in' ? { background: 'rgba(16, 185, 129, 0.15)', color: '#059669', borderColor: '#059669' } : {}}
+                      >
+                        📥 {lang === 'km' ? 'នាំចូលស្តុក' : 'Stock In'} ({invMovements.filter(m => m.type === 'stock_in').length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`table-action-pill ${invMovementFilter === 'stock_out' ? 'is-active' : ''}`}
+                        onClick={() => setInvMovementFilter('stock_out')}
+                        style={invMovementFilter === 'stock_out' ? { background: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', borderColor: '#dc2626' } : {}}
+                      >
+                        📤 {lang === 'km' ? 'នាំចេញស្តុក' : 'Stock Out'} ({invMovements.filter(m => m.type === 'stock_out').length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`table-action-pill ${invMovementFilter === 'transfer' ? 'is-active' : ''}`}
+                        onClick={() => setInvMovementFilter('transfer')}
+                        style={invMovementFilter === 'transfer' ? { background: 'rgba(59, 130, 246, 0.15)', color: '#2563eb', borderColor: '#2563eb' } : {}}
+                      >
+                        🔄 {lang === 'km' ? 'ផ្ទេរស្តុក' : 'Transfer'} ({invMovements.filter(m => m.type === 'transfer').length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`table-action-pill ${invMovementFilter === 'return' ? 'is-active' : ''}`}
+                        onClick={() => setInvMovementFilter('return')}
+                        style={invMovementFilter === 'return' ? { background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', borderColor: '#d97706' } : {}}
+                      >
+                        ↩️ {lang === 'km' ? 'បង្វិលចូលស្តុក' : 'Return'} ({invMovements.filter(m => m.type === 'return').length})
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        type="button"
+                        className="btn-luxury-action-pill is-primary"
+                        style={{ height: 34, padding: '0 14px', fontSize: 12 }}
+                        onClick={() => handleOpenInventoryModal('stock_in')}
+                      >
+                        + {lang === 'km' ? 'កត់ត្រាចលនាថ្មី' : 'Record Movement'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {filteredInventoryMovements.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+                      <div style={{ fontWeight: 600 }}>{t.inventory.noMovements}</div>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="react-table">
+                        <thead>
+                          <tr>
+                            <th>{t.inventory.colDate}</th>
+                            <th>{t.inventory.colProduct}</th>
+                            <th>{t.inventory.colType}</th>
+                            <th style={{ textAlign: 'center' }}>{t.inventory.colChange}</th>
+                            <th style={{ textAlign: 'center' }}>{t.inventory.colBalance}</th>
+                            <th>{t.inventory.colRef}</th>
+                            <th>{t.inventory.colNotes}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredInventoryMovements.map((m) => {
+                            const isPositive = m.type === 'stock_in' || m.type === 'return';
+                            const typeBadgeClass = `inv-type-badge badge-type-${m.type}`;
+                            const typeLabel =
+                              m.type === 'stock_in'
+                                ? (lang === 'km' ? '📥 នាំចូលស្តុក' : '📥 Stock In')
+                                : m.type === 'stock_out'
+                                ? (lang === 'km' ? '📤 នាំចេញស្តុក' : '📤 Stock Out')
+                                : m.type === 'transfer'
+                                ? (lang === 'km' ? '🔄 ផ្ទេរស្តុក' : '🔄 Transfer')
+                                : (lang === 'km' ? '↩️ បង្វិលចូលស្តុក' : '↩️ Return');
+
+                            return (
+                              <tr key={m.id}>
+                                <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                  {m.dateStr || new Date(m.timestamp).toLocaleDateString()}
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {m.productImage && (
+                                      <img
+                                        src={m.productImage}
+                                        alt={m.productName}
+                                        style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }}
+                                      />
+                                    )}
+                                    <div>
+                                      <div style={{ fontWeight: 600, fontSize: 13 }}>{m.productName}</div>
+                                      <div style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)' }}>{m.sku}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className={typeBadgeClass}>{typeLabel}</span>
+                                </td>
+                                <td style={{ textAlign: 'center', fontWeight: 800, fontSize: 13.5, color: isPositive ? '#059669' : m.type === 'transfer' ? '#2563eb' : '#dc2626' }}>
+                                  {m.type === 'transfer' ? `⇄ ${m.qty}` : isPositive ? `+${m.qty}` : `-${m.qty}`}
+                                </td>
+                                <td style={{ textAlign: 'center', whiteSpace: 'nowrap', fontSize: 12 }}>
+                                  <span style={{ color: 'var(--text-muted)' }}>{m.stockBefore}</span>
+                                  <span style={{ margin: '0 5px', color: 'var(--accent-dark)' }}>➔</span>
+                                  <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{m.stockAfter}</span>
+                                </td>
+                                <td>
+                                  <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>
+                                    {m.reference || '—'}
+                                  </div>
+                                  {m.location && (
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                      📍 {m.location}
+                                    </div>
+                                  )}
+                                  {m.supplier && (
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                      🏢 {m.supplier}
+                                    </div>
+                                  )}
+                                </td>
+                                <td>
+                                  <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+                                    {m.reason || '—'}
+                                  </div>
+                                  {m.notes && m.notes !== m.reason && (
+                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 2 }}>
+                                      {m.notes}
+                                    </div>
+                                  )}
+                                  {m.condition && (
+                                    <div style={{ fontSize: 10.5, color: '#059669', marginTop: 2 }}>
+                                      ✓ {m.condition}
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -3542,6 +4088,422 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* ── Luxury Inventory Operations Modal (Stock In, Stock Out, Transfer, Return) ── */}
+      {invModalOpen && (() => {
+        const activeProd = products.find((p) => p.sku === invSelectedSku) || products[0] || {};
+        const curStock = Number(activeProd.stock) || 0;
+        const qtyNum = Math.max(1, parseInt(invQty, 10) || 1);
+        let previewStock = curStock;
+        if (invOperationType === 'stock_in') previewStock = curStock + qtyNum;
+        else if (invOperationType === 'stock_out') previewStock = Math.max(0, curStock - qtyNum);
+        else if (invOperationType === 'return') previewStock = curStock + qtyNum;
+        else if (invOperationType === 'transfer') previewStock = curStock;
+
+        const opTitles = {
+          stock_in: t.inventory.stockInTitle,
+          stock_out: t.inventory.stockOutTitle,
+          transfer: t.inventory.transferTitle,
+          return: t.inventory.returnTitle,
+        };
+
+        const opIcons = {
+          stock_in: '📥',
+          stock_out: '📤',
+          transfer: '🔄',
+          return: '↩️',
+        };
+
+        const confirmButtons = {
+          stock_in: t.inventory.confirmStockIn,
+          stock_out: t.inventory.confirmStockOut,
+          transfer: t.inventory.confirmTransfer,
+          return: t.inventory.confirmReturn,
+        };
+
+        return (
+          <div className="admin-modal-overlay open" onClick={(e) => e.target === e.currentTarget && setInvModalOpen(false)}>
+            <div className="admin-modal inv-modal-dialog">
+              <div className="admin-modal-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>{opIcons[invOperationType]}</span>
+                  <div>
+                    <h3 className="admin-modal-title" style={{ margin: 0, fontSize: 16 }}>
+                      {opTitles[invOperationType]}
+                    </h3>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {t.inventory.modalSubtitle}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="table-action-pill"
+                  style={{ width: 32, height: 32, padding: 0, fontSize: 14 }}
+                  onClick={() => setInvModalOpen(false)}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 4 Operations Sub-tab Switcher within Modal */}
+              <div className="inv-modal-op-tabs">
+                <button
+                  type="button"
+                  className={`inv-modal-op-tab ${invOperationType === 'stock_in' ? 'active-in' : ''}`}
+                  onClick={() => setInvOperationType('stock_in')}
+                >
+                  📥 {lang === 'km' ? 'នាំចូលស្តុក' : 'Stock In'}
+                </button>
+                <button
+                  type="button"
+                  className={`inv-modal-op-tab ${invOperationType === 'stock_out' ? 'active-out' : ''}`}
+                  onClick={() => setInvOperationType('stock_out')}
+                >
+                  📤 {lang === 'km' ? 'នាំចេញស្តុក' : 'Stock Out'}
+                </button>
+                <button
+                  type="button"
+                  className={`inv-modal-op-tab ${invOperationType === 'transfer' ? 'active-transfer' : ''}`}
+                  onClick={() => setInvOperationType('transfer')}
+                >
+                  🔄 {lang === 'km' ? 'ផ្ទេរស្តុក' : 'Transfer'}
+                </button>
+                <button
+                  type="button"
+                  className={`inv-modal-op-tab ${invOperationType === 'return' ? 'active-return' : ''}`}
+                  onClick={() => setInvOperationType('return')}
+                >
+                  ↩️ {lang === 'km' ? 'បង្វិលចូលស្តុក' : 'Return'}
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitInventoryOperation}>
+                <div className="admin-modal-body" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Product Selection */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                      {t.inventory.fieldProduct} *
+                    </label>
+                    <select
+                      className="form-control luxury-input-pill"
+                      value={invSelectedSku || activeProd.sku}
+                      onChange={(e) => setInvSelectedSku(e.target.value)}
+                      required
+                    >
+                      {products.map((p) => (
+                        <option key={p.sku} value={p.sku}>
+                          {p.name} ({p.sku}) — {lang === 'km' ? 'ស្តុកបច្ចុប្បន្ន' : 'Stock'}: {p.stock || 0}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Active Product Mini Card */}
+                    {activeProd.sku && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        borderRadius: 12,
+                        background: 'var(--warm-gray)',
+                        border: '1px solid var(--border)',
+                        marginTop: 8,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <img
+                            src={activeProd.image}
+                            alt={activeProd.name}
+                            style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 12.5 }}>{activeProd.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              {lang === 'km' ? 'តម្លៃ' : 'Price'}: ${activeProd.price} · {activeProd.cat}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>
+                            {lang === 'km' ? 'ស្តុកបច្ចុប្បន្ន' : 'Current Stock'}
+                          </span>
+                          <span style={{ fontWeight: 800, fontSize: 14, color: curStock === 0 ? '#dc2626' : curStock <= 10 ? '#d97706' : '#059669' }}>
+                            {curStock} {lang === 'km' ? 'ឯកតា' : 'units'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity & Quick Chips */}
+                  <div className="form-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <label className="form-label" style={{ fontSize: 12, fontWeight: 700, margin: 0 }}>
+                        {t.inventory.fieldQty} *
+                      </label>
+                      <div className="inv-quick-chips">
+                        <button type="button" className="inv-chip-btn" onClick={() => setInvQty(5)}>+5</button>
+                        <button type="button" className="inv-chip-btn" onClick={() => setInvQty(10)}>+10</button>
+                        <button type="button" className="inv-chip-btn" onClick={() => setInvQty(25)}>+25</button>
+                        <button type="button" className="inv-chip-btn" onClick={() => setInvQty(50)}>+50</button>
+                        <button type="button" className="inv-chip-btn" onClick={() => setInvQty(100)}>+100</button>
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-control"
+                      value={invQty}
+                      onChange={(e) => setInvQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      required
+                      style={{ fontSize: 15, fontWeight: 700 }}
+                    />
+                  </div>
+
+                  {/* Operation-specific Dynamic Fields */}
+                  {invOperationType === 'stock_in' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldSupplier}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={lang === 'km' ? 'រោងចក្រភ្នំពេញ កាត់ដេរ' : 'Phnom Penh Garments / Supplier'}
+                          value={invSupplier}
+                          onChange={(e) => setInvSupplier(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldUnitCost}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="form-control"
+                          placeholder="22.50"
+                          value={invUnitCost}
+                          onChange={(e) => setInvUnitCost(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldRef}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={lang === 'km' ? 'PO-202611-001 / INV-882' : 'PO-202611-001 / INV-882'}
+                          value={invRef}
+                          onChange={(e) => setInvRef(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {invOperationType === 'stock_out' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldReason} *
+                        </label>
+                        <select
+                          className="form-control"
+                          value={invReason}
+                          onChange={(e) => setInvReason(e.target.value)}
+                        >
+                          <option value="">{lang === 'km' ? 'ជ្រើសរើសមូលហេតុ…' : 'Select Reason…'}</option>
+                          <option value={lang === 'km' ? 'ការលក់ដុំក្រៅប្រព័ន្ធ' : 'Wholesale / Offline Order'}>
+                            {lang === 'km' ? 'ការលក់ដុំក្រៅប្រព័ន្ធ (Wholesale)' : 'Wholesale / Offline Order'}
+                          </option>
+                          <option value={lang === 'km' ? 'ទំនិញខូចខាតកំឡុងពេលរក្សាទុក' : 'Damaged / Defective Goods'}>
+                            {lang === 'km' ? 'ទំនិញខូចខាតកំឡុងពេលរក្សាទុក (Damaged)' : 'Damaged / Defective Goods'}
+                          </option>
+                          <option value={lang === 'km' ? 'គំរូតាំងបង្ហាញហាង' : 'Store Display / Sample'}>
+                            {lang === 'km' ? 'គំរូតាំងបង្ហាញហាង (Store Display)' : 'Store Display / Sample'}
+                          </option>
+                          <option value={lang === 'km' ? 'ការបាត់បង់ស្តុកជាក់ស្តែង' : 'Stock Shrinkage / Loss'}>
+                            {lang === 'km' ? 'ការបាត់បង់ស្តុកជាក់ស្តែង (Loss)' : 'Stock Shrinkage / Loss'}
+                          </option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldRef}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={lang === 'km' ? 'SO-202611-042' : 'SO-202611-042'}
+                          value={invRef}
+                          onChange={(e) => setInvRef(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {invOperationType === 'transfer' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldFrom} *
+                        </label>
+                        <select
+                          className="form-control"
+                          value={invFromLocation}
+                          onChange={(e) => setInvFromLocation(e.target.value)}
+                        >
+                          <option value={lang === 'km' ? 'ឃ្លាំងកណ្តាល (Central Warehouse)' : 'Central Warehouse'}>
+                            {lang === 'km' ? 'ឃ្លាំងកណ្តាល (Central Warehouse)' : 'Central Warehouse'}
+                          </option>
+                          <option value={lang === 'km' ? 'ហាងលក់រាយបឹងកេងកង (BKK1 Boutique)' : 'BKK1 Flagship Boutique'}>
+                            {lang === 'km' ? 'ហាងលក់រាយបឹងកេងកង (BKK1 Boutique)' : 'BKK1 Flagship Boutique'}
+                          </option>
+                          <option value={lang === 'km' ? 'សាខាទួលគោក (Toul Kork Branch)' : 'Toul Kork Branch'}>
+                            {lang === 'km' ? 'សាខាទួលគោក (Toul Kork Branch)' : 'Toul Kork Branch'}
+                          </option>
+                          <option value={lang === 'km' ? 'មជ្ឈមណ្ឌលព្រលានយន្តហោះ (Airport Hub)' : 'Airport Hub'}>
+                            {lang === 'km' ? 'មជ្ឈមណ្ឌលព្រលានយន្តហោះ (Airport Hub)' : 'Airport Hub'}
+                          </option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldTo} *
+                        </label>
+                        <select
+                          className="form-control"
+                          value={invToLocation}
+                          onChange={(e) => setInvToLocation(e.target.value)}
+                        >
+                          <option value={lang === 'km' ? 'ហាងលក់រាយបឹងកេងកង (BKK1 Boutique)' : 'BKK1 Flagship Boutique'}>
+                            {lang === 'km' ? 'ហាងលក់រាយបឹងកេងកង (BKK1 Boutique)' : 'BKK1 Flagship Boutique'}
+                          </option>
+                          <option value={lang === 'km' ? 'ឃ្លាំងកណ្តាល (Central Warehouse)' : 'Central Warehouse'}>
+                            {lang === 'km' ? 'ឃ្លាំងកណ្តាល (Central Warehouse)' : 'Central Warehouse'}
+                          </option>
+                          <option value={lang === 'km' ? 'សាខាទួលគោក (Toul Kork Branch)' : 'Toul Kork Branch'}>
+                            {lang === 'km' ? 'សាខាទួលគោក (Toul Kork Branch)' : 'Toul Kork Branch'}
+                          </option>
+                          <option value={lang === 'km' ? 'មជ្ឈមណ្ឌលព្រលានយន្តហោះ (Airport Hub)' : 'Airport Hub'}>
+                            {lang === 'km' ? 'មជ្ឈមណ្ឌលព្រលានយន្តហោះ (Airport Hub)' : 'Airport Hub'}
+                          </option>
+                        </select>
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldRef}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={lang === 'km' ? 'TR-202611-105' : 'TR-202611-105'}
+                          value={invRef}
+                          onChange={(e) => setInvRef(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {invOperationType === 'return' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldCondition} *
+                        </label>
+                        <select
+                          className="form-control"
+                          value={invCondition}
+                          onChange={(e) => setInvCondition(e.target.value)}
+                        >
+                          <option value={lang === 'km' ? 'គុណភាពល្អឥតខ្ចោះ (Like New)' : 'Perfect / Like New'}>
+                            {lang === 'km' ? 'គុណភាពល្អឥតខ្ចោះ (Like New)' : 'Perfect / Like New'}
+                          </option>
+                          <option value={lang === 'km' ? 'ប្តូរទំហំ ឬពណ៌ (Exchange)' : 'Size / Color Exchange'}>
+                            {lang === 'km' ? 'ប្តូរទំហំ ឬពណ៌ (Exchange)' : 'Size / Color Exchange'}
+                          </option>
+                          <option value={lang === 'km' ? 'មានកំហុសបន្តិចបន្តួច (Minor Flaw)' : 'Minor Defect / Clearance'}>
+                            {lang === 'km' ? 'មានកំហុសបន្តិចបន្តួច (Minor Flaw)' : 'Minor Defect / Clearance'}
+                          </option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                          {t.inventory.fieldRef}
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder={lang === 'km' ? 'RET-ORD-202611-002' : 'RET-ORD-202611-002'}
+                          value={invRef}
+                          onChange={(e) => setInvRef(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes / Remarks */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, display: 'block' }}>
+                      {t.inventory.fieldNotes}
+                    </label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      placeholder={lang === 'km' ? 'បញ្ជាក់ព័ត៌មានបន្ថែមអំពីចលនាស្តុកនេះ…' : 'Add any additional audit notes or context…'}
+                      value={invNotes}
+                      onChange={(e) => setInvNotes(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Live Calculation Preview Box */}
+                  <div className="inv-calc-preview">
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {lang === 'km' ? 'ស្តុកបច្ចុប្បន្ន' : 'Current'}
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: 16 }}>{curStock}</div>
+                    </div>
+                    <div style={{ fontSize: 18, color: 'var(--accent-dark)', fontWeight: 800 }}>
+                      {invOperationType === 'stock_in' ? '+' : invOperationType === 'stock_out' ? '-' : invOperationType === 'transfer' ? '⇄' : '+'}
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {lang === 'km' ? 'ចំនួនបំលាស់ប្តូរ' : 'Change'}
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: invOperationType === 'stock_out' ? '#dc2626' : '#059669' }}>
+                        {qtyNum}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 18, color: 'var(--text-muted)' }}>=</div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {lang === 'km' ? 'ស្តុកបន្ទាប់ពីប្រតិបត្តិការ' : 'Expected Balance'}
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: 16, color: previewStock === 0 ? '#dc2626' : previewStock <= 10 ? '#d97706' : '#059669' }}>
+                        {previewStock}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button type="button" className="btn-luxury-action-pill is-secondary" onClick={() => setInvModalOpen(false)}>
+                    {t.orders.cancelBtn}
+                  </button>
+                  <button type="submit" className="btn-luxury-action-pill is-primary">
+                    {confirmButtons[invOperationType]}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

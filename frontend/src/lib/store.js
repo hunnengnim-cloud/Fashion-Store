@@ -19,6 +19,7 @@ export const KEYS = {
   CART: 'cs_cart',
   WISHLIST: 'cs_wishlist',
   ORDERS: 'cs_orders',
+  INVENTORY_MOVEMENTS: 'cs_inventory_movements',
 };
 
 export function getLang() {
@@ -365,6 +366,118 @@ export function deleteOrder(orderNum) {
 
 export function clearOrders() {
   saveOrders([]);
+}
+
+/* ── Inventory Movements Storage (Stock In, Stock Out, Transfer, Return) ── */
+export const DEFAULT_INVENTORY_MOVEMENTS = [
+  {
+    id: 'MOV-1732620100',
+    type: 'stock_in',
+    sku: 'CS-MSH-001',
+    productName: 'Essential Linen Shirt',
+    productImage: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&q=80',
+    qty: 20,
+    stockBefore: 16,
+    stockAfter: 36,
+    reference: 'PO-202611-081',
+    location: 'Central Warehouse (Phnom Penh)',
+    reason: 'New Season Restock (ការនាំចូលស្តុកថ្មី)',
+    timestamp: '2026-11-26T08:30:00.000Z',
+    dateStr: 'Nov 26, 2026 · 08:30 AM',
+    user: 'AdminStore',
+  },
+  {
+    id: 'MOV-1732615400',
+    type: 'transfer',
+    sku: 'CS-MPN-005',
+    productName: 'Slim Chino Pants',
+    productImage: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=120&q=80',
+    qty: 10,
+    stockBefore: 38,
+    stockAfter: 28,
+    reference: 'TR-202611-042',
+    fromLocation: 'Central Warehouse',
+    toLocation: 'BKK1 Flagship Store',
+    location: 'Central Warehouse → BKK1 Flagship Store',
+    reason: 'Store Display Restock (ផ្ទេរទៅសាខាបឹងកេងកង)',
+    timestamp: '2026-11-25T15:20:00.000Z',
+    dateStr: 'Nov 25, 2026 · 03:20 PM',
+    user: 'AdminStore',
+  },
+  {
+    id: 'MOV-1732608100',
+    type: 'return',
+    sku: 'CS-MBL-009',
+    productName: 'Tailored Wool Blazer',
+    productImage: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=120&q=80',
+    qty: 1,
+    stockBefore: 11,
+    stockAfter: 12,
+    reference: 'RET-202611-018',
+    location: 'Customer Return → Store Shelf',
+    reason: 'Size Exchange (ប្តូរទំហំ Size M មក L)',
+    condition: 'Perfect / Like New (គុណភាពល្អឥតខ្ចោះ)',
+    timestamp: '2026-11-25T10:15:00.000Z',
+    dateStr: 'Nov 25, 2026 · 10:15 AM',
+    user: 'AdminStore',
+  },
+  {
+    id: 'MOV-1732599000',
+    type: 'stock_out',
+    sku: 'CS-MJK-003',
+    productName: 'Classic Denim Jacket',
+    productImage: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=120&q=80',
+    qty: 2,
+    stockBefore: 17,
+    stockAfter: 15,
+    reference: 'SO-202611-009',
+    location: 'Store Front',
+    reason: 'Mannequin Display Sample (តាំងបង្ហាញលើរូប)',
+    timestamp: '2026-11-24T14:40:00.000Z',
+    dateStr: 'Nov 24, 2026 · 02:40 PM',
+    user: 'AdminStore',
+  },
+];
+
+export function getInventoryMovements() {
+  try {
+    const raw = localStorage.getItem(KEYS.INVENTORY_MOVEMENTS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // fallback
+  }
+  return DEFAULT_INVENTORY_MOVEMENTS;
+}
+
+export function saveInventoryMovements(list) {
+  try {
+    const validList = Array.isArray(list) ? list : [];
+    localStorage.setItem(KEYS.INVENTORY_MOVEMENTS, JSON.stringify(validList));
+    window.dispatchEvent(new CustomEvent('fashionstore:inventoryMovements', { detail: { movements: validList } }));
+  } catch {
+    // ignore
+  }
+}
+
+export function recordInventoryMovement(movement) {
+  const current = getInventoryMovements();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+    ' · ' +
+    now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const newRecord = {
+    id: `MOV-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+    timestamp: now.toISOString(),
+    dateStr,
+    ...movement,
+  };
+  const updated = [newRecord, ...current].slice(0, 500);
+  saveInventoryMovements(updated);
+  return updated;
 }
 
 export const CATEGORY_HEROES = {
