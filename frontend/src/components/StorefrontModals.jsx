@@ -1717,6 +1717,35 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     return String(status || 'pending').toUpperCase();
   };
 
+  const handleDeleteOrder = (orderNum) => {
+    const confirmMsg = lang === 'km'
+      ? `តើអ្នកចង់លុបការបញ្ជាទិញ #${orderNum} នេះចេញពីបញ្ជីមែនទេ?`
+      : `Are you sure you want to delete order #${orderNum}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    const currentOrders = getOrders();
+    const updated = currentOrders.filter((ord) => ord.num !== orderNum);
+    saveOrders(updated);
+    notify(
+      lang === 'km' ? `បានលុបការបញ្ជាទិញ #${orderNum} រួចរាល់` : `Order #${orderNum} deleted`,
+      'info',
+      2000
+    );
+  };
+
+  const handleClearAllOrders = () => {
+    const confirmMsg = lang === 'km'
+      ? `តើអ្នកចង់លុបប្រវត្តិការបញ្ជាទិញទាំងអស់ (${orders.length}) មែនទេ?`
+      : `Are you sure you want to delete all orders (${orders.length})?`;
+    if (!window.confirm(confirmMsg)) return;
+    saveOrders([]);
+    notify(
+      lang === 'km' ? 'បានលុបការបញ្ជាទិញទាំងអស់ជោគជ័យ' : 'All orders deleted',
+      'info',
+      2000
+    );
+  };
+
   return (
     <div
       className="modal-overlay open"
@@ -1735,9 +1764,33 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
               {lang === 'km' ? 'ការតាមដានការដឹកជញ្ជូន និងដំណាក់កាលបញ្ជាទិញជាក់ស្ដែង' : 'Real-time Order Tracking & Delivery Lifecycle'}
             </span>
           </div>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {orders.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{
+                  fontSize: 11.5,
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  borderRadius: 999,
+                  padding: '4px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  cursor: 'pointer',
+                }}
+                onClick={handleClearAllOrders}
+                title={lang === 'km' ? 'លុបការបញ្ជាទិញទាំងអស់' : 'Delete All Orders'}
+              >
+                <span>🗑️</span>
+                <span>{lang === 'km' ? 'លុបទាំងអស់' : 'Delete All'}</span>
+              </button>
+            )}
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="modal-body orders-modal-body">
@@ -1810,6 +1863,28 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                         >
                           {getStatusText(o.status)}
                         </span>
+
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{
+                            padding: '3px 8px',
+                            fontSize: 11,
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.25)',
+                            borderRadius: 8,
+                            background: 'rgba(239, 68, 68, 0.06)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => handleDeleteOrder(o.num)}
+                          title={lang === 'km' ? 'លុបការបញ្ជាទិញនេះ' : 'Delete this order'}
+                        >
+                          <span>🗑️</span>
+                          <span>{lang === 'km' ? 'លុប' : 'Delete'}</span>
+                        </button>
                       </div>
                     </div>
 

@@ -314,71 +314,57 @@ export const CAMBODIA_COURIERS = [
 ];
 
 /* ── Orders Storage ──────────────────────────────────────── */
-export const DEFAULT_ORDERS = [
-  {
-    num: 'ORD-20261018-0001',
-    date: 'Oct 18, 2026 · 14:22',
-    customer: {
-      name: 'Sokha Chan',
-      email: 'sokha@example.com',
-      phone: '012 345 678',
-      address: 'BKK1, Phnom Penh',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80',
-    },
-    products: [
-      { name: 'Essential Linen Shirt', size: 'M', qty: 2, price: 24.99, image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&q=80' },
-    ],
-    total: 49.98,
-    payment: 'KHQR Paid',
-    payment_method: 'khqr',
-    payment_status: 'paid',
-    status: 'delivered',
-    courier: 'J&T Express 🚚',
-    tracking_number: 'JT-882910KH',
-  },
-  {
-    num: 'ORD-20261018-0002',
-    date: 'Oct 18, 2026 · 16:05',
-    customer: {
-      name: 'Dara Meng',
-      email: 'dara@example.com',
-      phone: '077 891 234',
-      address: 'Toul Kork, Phnom Penh',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80',
-    },
-    products: [
-      { name: 'Floral Wrap Dress', size: 'S', qty: 1, price: 42.00, image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=120&q=80' },
-    ],
-    total: 42.00,
-    payment: 'Cash on Delivery',
-    payment_method: 'cod',
-    payment_status: 'unpaid',
-    status: 'processing',
-    courier: 'Virak Buntham (VET) 🚌',
-    tracking_number: 'VET-509124',
-  },
-];
+export const DEFAULT_ORDERS = [];
+
+const CLEANED_ORDERS_MIGRATION_KEY = 'fs_cleaned_mock_orders_v2';
 
 export function getOrders() {
   try {
-    const raw = localStorage.getItem(KEYS.ORDERS);
+    // One-time automatic cleanup of legacy mock orders from localStorage
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(CLEANED_ORDERS_MIGRATION_KEY) !== 'true') {
+      localStorage.setItem(CLEANED_ORDERS_MIGRATION_KEY, 'true');
+      localStorage.removeItem(KEYS.ORDERS);
+      return [];
+    }
+
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(KEYS.ORDERS) : null;
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Filter out legacy dummy mock orders if any slip through
+        const cleaned = parsed.filter(
+          (o) => o && o.num !== 'ORD-20261018-0001' && o.num !== 'ORD-20261018-0002' && o.num !== 'ORD-20261102-8821' && o.num !== 'ORD-20261102-9412'
+        );
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem(KEYS.ORDERS, JSON.stringify(cleaned));
+        }
+        return cleaned;
+      }
     }
   } catch {
     // fallback
   }
-  return DEFAULT_ORDERS;
+  return [];
 }
 
 export function saveOrders(list) {
   try {
-    localStorage.setItem(KEYS.ORDERS, JSON.stringify(list));
+    const validList = Array.isArray(list) ? list : [];
+    localStorage.setItem(KEYS.ORDERS, JSON.stringify(validList));
     window.dispatchEvent(new Event('fashionstore:orders'));
   } catch {
     // ignore
   }
+}
+
+export function deleteOrder(orderNum) {
+  const list = getOrders().filter((o) => o && o.num !== orderNum);
+  saveOrders(list);
+  return list;
+}
+
+export function clearOrders() {
+  saveOrders([]);
 }
 
 export const CATEGORY_HEROES = {

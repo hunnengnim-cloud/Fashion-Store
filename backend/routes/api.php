@@ -224,6 +224,19 @@ Route::prefix('v1')->group(function (): void {
 
                     return response()->json(['message' => 'Order deleted successfully.']);
                 })->name('orders.destroy');
+                Route::delete('orders-all', function (): JsonResponse {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('order_items')) {
+                        \App\Models\OrderItem::query()->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('payments')) {
+                        \App\Models\Payment::whereNotNull('order_id')->delete();
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasTable('orders')) {
+                        \App\Models\Order::query()->delete();
+                    }
+
+                    return response()->json(['message' => 'All orders deleted successfully.']);
+                })->name('orders.clear-all');
 
                 // Reports API
                 Route::get('reports', function (Request $request): JsonResponse {

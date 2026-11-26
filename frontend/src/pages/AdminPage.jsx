@@ -467,6 +467,44 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     notify(`Order ${orderNum} updated to ${nextStatus}.`, 'success', 2200);
   };
 
+  const handleDeleteOrder = async (orderNum) => {
+    const confirmMsg = lang === 'km'
+      ? `តើអ្នកពិតជាចង់លុបការបញ្ជាទិញ #${orderNum} នេះមែនទេ?`
+      : `Are you sure you want to delete order #${orderNum}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    const updated = orders.filter((o) => o.num !== orderNum);
+    setOrders(updated);
+    saveOrders(updated);
+    try {
+      await api.delete(`/admin/orders/${encodeURIComponent(orderNum)}`);
+    } catch (_) {}
+    notify(
+      lang === 'km' ? `បានលុបការបញ្ជាទិញ #${orderNum} រួចរាល់។` : `Order #${orderNum} deleted successfully.`,
+      'success',
+      2000
+    );
+  };
+
+  const handleClearAllOrders = async () => {
+    if (!orders.length) return;
+    const confirmMsg = lang === 'km'
+      ? `តើអ្នកពិតជាចង់លុបការបញ្ជាទិញទាំងអស់ (${orders.length}) មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។`
+      : `Are you sure you want to delete ALL orders (${orders.length})? This cannot be undone.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setOrders([]);
+    saveOrders([]);
+    try {
+      await api.delete('/admin/orders-all');
+    } catch (_) {}
+    notify(
+      lang === 'km' ? 'បានលុបការបញ្ជាទិញទាំងអស់ជោគជ័យ។' : 'All orders deleted successfully.',
+      'success',
+      2200
+    );
+  };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     const res = await api.post('/admin/users', newUserForm);
@@ -1673,6 +1711,31 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                     <option value="shipped">{t.orders.filterShipped}</option>
                     <option value="delivered">{t.orders.filterDelivered}</option>
                   </select>
+                  {orders.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      style={{
+                        height: 38,
+                        borderRadius: 999,
+                        padding: '0 14px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#ef4444',
+                        border: '1.5px solid rgba(239, 68, 68, 0.4)',
+                        background: 'rgba(239, 68, 68, 0.06)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                      onClick={handleClearAllOrders}
+                      title={lang === 'km' ? 'លុបការបញ្ជាទិញទាំងអស់' : 'Delete All Orders'}
+                    >
+                      <span>🗑️</span>
+                      <span>{lang === 'km' ? 'លុបទាំងអស់' : 'Delete All'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1911,13 +1974,29 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                             )}
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              className="table-action-pill is-receipt"
-                              onClick={() => setReceiptOrder(o)}
-                            >
-                              {t.orders.btnReceipt}
-                            </button>
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className="table-action-pill is-receipt"
+                                onClick={() => setReceiptOrder(o)}
+                              >
+                                {t.orders.btnReceipt}
+                              </button>
+                              <button
+                                type="button"
+                                className="table-action-pill is-delete"
+                                style={{
+                                  color: '#ef4444',
+                                  borderColor: 'rgba(239, 68, 68, 0.3)',
+                                  background: 'rgba(239, 68, 68, 0.08)',
+                                  fontSize: 11,
+                                }}
+                                onClick={() => handleDeleteOrder(o.num)}
+                                title={lang === 'km' ? 'លុបការបញ្ជាទិញ' : 'Delete Order'}
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
