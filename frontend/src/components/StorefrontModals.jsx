@@ -1599,7 +1599,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
           ...ord,
           status: 'delivered',
           payment_status: 'paid',
-          payment: lang === 'km' ? 'COD Paid (សាច់ប្រាក់)' : 'COD Paid (Cash)',
+          payment: lang === 'km' ? 'បានទូទាត់សាច់ប្រាក់' : 'COD Paid (Cash)',
           delivered_at: new Date().toISOString(),
           customer_confirmed: true,
         };
@@ -1635,35 +1635,35 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     {
       stage: 1,
       actor: '[Customer]',
-      title: 'Checkout 🛒',
+      title: 'Checkout',
       sub: 'Customer selected Cash on Delivery checkout method',
       icon: '🛒',
     },
     {
       stage: 2,
       actor: '[System]',
-      title: 'Order Received 📥',
+      title: 'Order Received',
       sub: 'System accepted the order immediately without prior payment check',
       icon: '📥',
     },
     {
       stage: 3,
-      actor: '[Store Admin]',
-      title: 'Packaging Goods 📦',
+      actor: '[Store Staff]',
+      title: 'Packaging Goods',
       sub: 'Store staff prepares items, inspects quality, and packages securely',
       icon: '📦',
     },
     {
       stage: 4,
-      actor: '[Logistics Courier]',
-      title: 'Out for Delivery 🚚 📍',
+      actor: '[Courier]',
+      title: 'Out for Delivery',
       sub: 'Courier delivers items with real-time tracking — Unpaid (prepare cash)',
       icon: '🚚',
     },
     {
       stage: 5,
-      actor: '[Customer & Store]',
-      title: 'Delivered & Paid 🏁',
+      actor: '[Completed]',
+      title: 'Delivered & Paid',
       sub: 'Customer receives package, pays cash to courier, and completes the order',
       icon: '🏁',
     },
@@ -1671,39 +1671,51 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
     {
       stage: 1,
       actor: '[អតិថិជន]',
-      title: 'ការបញ្ជាទិញ 🛒',
+      title: 'ការបញ្ជាទិញ',
       sub: 'អតិថិជនជ្រើសរើសទូទាត់សាច់ប្រាក់ពេលទទួលទំនិញ',
       icon: '🛒',
     },
     {
       stage: 2,
       actor: '[ប្រព័ន្ធហាង]',
-      title: 'ទទួលបានការបញ្ជាទិញ 📥',
+      title: 'បានទទួលការកុម្ម៉ង់',
       sub: 'ប្រព័ន្ធទទួលយកការកុម្ម៉ង់ភ្លាមៗ ដោយមិនបាច់បង់ប្រាក់ជាមុនឡើយ',
       icon: '📥',
     },
     {
       stage: 3,
       actor: '[បុគ្គលិកហាង]',
-      title: 'វេចខ្ចប់ទំនិញ 📦',
+      title: 'វេចខ្ចប់ទំនិញ',
       sub: 'បុគ្គលិករៀបចំទំនិញ ពិនិត្យគុណភាព និងវេចខ្ចប់យ៉ាងមានសុវត្ថិភាព',
       icon: '📦',
     },
     {
       stage: 4,
       actor: '[ក្រុមហ៊ុនដឹកជញ្ជូន]',
-      title: 'កំពុងដឹកជញ្ជូន 🚚 📍',
+      title: 'កំពុងដឹកជញ្ជូន',
       sub: 'ក្រុមហ៊ុនដឹកជញ្ជូនយកទំនិញទៅដឹកជូន (សូមត្រៀមសាច់ប្រាក់ពេលទំនិញមកដល់)',
       icon: '🚚',
     },
     {
       stage: 5,
       actor: '[អតិថិជន & ហាង]',
-      title: 'បានដឹកជញ្ជូន និងបង់ប្រាក់រួចរាល់ 🏁',
+      title: 'បានដឹកជញ្ជូនរួចរាល់',
       sub: 'អតិថិជនទទួលបានទំនិញ និងប្រគល់សាច់ប្រាក់ជូនអ្នកដឹកជញ្ជូនរួចរាល់',
       icon: '🏁',
     },
   ];
+
+  const getStatusText = (status) => {
+    const s = String(status || 'pending').toLowerCase();
+    if (lang === 'km') {
+      if (s === 'delivered') return 'បានដឹកជញ្ជូនរួច';
+      if (s === 'shipped') return 'កំពុងដឹកជញ្ជូន';
+      if (s === 'processing' || s === 'confirmed') return 'កំពុងដំណើរការ';
+      if (s === 'cancelled') return 'បានបោះបង់';
+      return 'កំពុងរង់ចាំ';
+    }
+    return String(status || 'pending').toUpperCase();
+  };
 
   return (
     <div
@@ -1712,15 +1724,15 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal modal-lg" style={{ maxWidth: 840 }}>
-        <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', padding: '16px 20px' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="modal modal-lg orders-modal-dialog">
+        <div className="modal-header orders-modal-header">
+          <div className="orders-modal-title-wrap">
+            <h3 className="orders-modal-title">
               <span>🛍️</span>
-              <span>{lang === 'km' ? `ការបញ្ជាទិញ & ការតាមដានការដឹកជញ្ជូន (${orders.length})` : `My Orders & Delivery Tracking (${orders.length})`}</span>
+              <span>{lang === 'km' ? `ការបញ្ជាទិញ & ការតាមដាន (${orders.length})` : `My Orders & Delivery Tracking (${orders.length})`}</span>
             </h3>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {lang === 'km' ? 'ការតាមដានការដឹកជញ្ជូន និងដំណាក់កាលបញ្ជាទិញជាក់ស្ដែង' : 'Cash on Delivery (COD) Real-time Order Tracking & Lifecycle'}
+            <span className="orders-modal-sub">
+              {lang === 'km' ? 'ការតាមដានការដឹកជញ្ជូន និងដំណាក់កាលបញ្ជាទិញជាក់ស្ដែង' : 'Real-time Order Tracking & Delivery Lifecycle'}
             </span>
           </div>
           <button type="button" className="btn btn-ghost btn-sm" onClick={onClose}>
@@ -1728,7 +1740,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
           </button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '76vh', overflowY: 'auto', padding: '18px 20px' }}>
+        <div className="modal-body orders-modal-body">
           {!orders.length ? (
             <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-secondary)' }}>
               <div style={{ fontSize: 42, marginBottom: 12 }}>📦</div>
@@ -1740,7 +1752,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {orders.map((o) => {
                 const currentStage = getStageIndex(o.status, o.payment_status);
                 const isCod = (o.payment_method === 'cod') || String(o.payment || '').toLowerCase().includes('cash');
@@ -1749,101 +1761,70 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                 const trackingCode = o.tracking_number && o.tracking_number !== 'PENDING'
                   ? o.tracking_number
                   : `JT-${String(o.num).replace(/\D/g, '').slice(-6) || '892101'}KH`;
-                const courierName = o.courier && o.courier !== 'Pending Assignment' ? o.courier : 'J&T Express 🚚';
+                const courierName = o.courier && o.courier !== 'Pending Assignment' ? o.courier : (lang === 'km' ? 'ក្រុមហ៊ុន J&T Express' : 'J&T Express 🚚');
                 const isExpanded = Boolean(expandedFlow[o.num]);
 
                 return (
-                  <div
-                    key={o.num}
-                    style={{
-                      border: '1px solid var(--border)',
-                      borderRadius: 16,
-                      background: 'var(--card-bg, #ffffff)',
-                      boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
-                      padding: '16px 18px',
-                      overflow: 'hidden',
-                    }}
-                  >
+                  <div key={o.num} className="order-tracking-card">
                     {/* Order Head Bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <strong style={{ fontSize: 15, letterSpacing: '0.02em' }}>#{o.num}</strong>
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>· {o.date}</span>
+                    <div className="order-card-head">
+                      <div className="order-id-info">
+                        <div className="order-id-num-row">
+                          <strong className="order-id-badge">#{o.num}</strong>
+                          <span className="order-date-text">· {o.date}</span>
                         </div>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+                        <div className="order-recipient-info">
                           {lang === 'km' ? 'អ្នកទទួល:' : 'Recipient:'} <strong>{o.customer?.name}</strong> ({o.customer?.phone}) · {o.customer?.address}
                         </div>
                       </div>
 
                       {/* Badges */}
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div className="order-card-badges">
                         {isCod ? (
                           <span
-                            className="badge"
+                            className="order-badge-pill"
                             style={{
                               background: isPaid ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.14)',
                               color: isPaid ? '#059669' : '#b45309',
                               border: isPaid ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.35)',
-                              fontWeight: 700,
-                              fontSize: 11,
-                              padding: '4px 8px',
-                              borderRadius: 6,
                             }}
                           >
                             {isPaid
-                              ? (lang === 'km' ? '✓ 💵 បង់រួចរាល់' : '✓ 💵 COD · PAID')
-                              : (lang === 'km' ? '💵 មិនទាន់បង់' : '💵 COD · UNPAID')}
+                              ? (lang === 'km' ? '✓ បង់រួចរាល់' : '✓ COD · PAID')
+                              : (lang === 'km' ? 'មិនទាន់បង់ប្រាក់' : 'COD · UNPAID')}
                           </span>
                         ) : (
-                          <span className="badge badge-green" style={{ fontSize: 11, padding: '4px 8px' }}>
-                            {lang === 'km' ? '✓ 🇰🇭 KHQR បង់រួច' : '✓ 🇰🇭 KHQR PAID'}
+                          <span className="order-badge-pill" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                            {lang === 'km' ? '✓ បង់រួចតាម KHQR' : '✓ KHQR PAID'}
                           </span>
                         )}
 
                         <span
-                          className="badge"
+                          className="order-badge-pill"
                           style={{
                             background: isDelivered ? 'rgba(16, 185, 129, 0.12)' : 'rgba(212, 175, 55, 0.14)',
                             color: isDelivered ? '#059669' : 'var(--accent-dark, #b45309)',
                             border: '1px solid var(--border)',
-                            fontWeight: 700,
-                            fontSize: 11,
-                            padding: '4px 8px',
-                            borderRadius: 6,
                             textTransform: 'uppercase',
                           }}
                         >
-                          {String(o.status || 'pending').toUpperCase()}
+                          {getStatusText(o.status)}
                         </span>
                       </div>
                     </div>
 
                     {/* COD Payment Status Alert Box */}
                     {isCod && (
-                      <div
-                        style={{
-                          margin: '12px 0',
-                          padding: '10px 14px',
-                          borderRadius: 10,
-                          background: isPaid ? 'rgba(16, 185, 129, 0.08)' : 'rgba(234, 88, 12, 0.08)',
-                          border: isPaid ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid rgba(234, 88, 12, 0.28)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          gap: 10,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 }}>
-                          <span style={{ fontSize: 18 }}>{isPaid ? '✅' : '💵'}</span>
+                      <div className={`order-alert-box ${isPaid ? 'paid' : ''}`}>
+                        <div className="order-alert-content">
+                          <span className="order-alert-icon">{isPaid ? '✅' : '💵'}</span>
                           <div>
-                            <div style={{ fontWeight: 700, color: isPaid ? '#059669' : '#ea580c' }}>
+                            <div className="order-alert-title">
                               {isPaid
                                 ? (lang === 'km' ? 'ប្រតិបត្តិការត្រូវបានបញ្ចប់ — ទទួលបានទំនិញ និងទូទាត់ប្រាក់រួចរាល់' : 'Transaction Completed — Goods Received & Paid')
                                 : (lang === 'km' ? 'ទូទាត់ពេលទទួលទំនិញ — មិនទាន់បង់ប្រាក់' : 'Cash on Delivery (COD) — Unpaid')}
                             </div>
-                            <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                            <div className="order-alert-desc">
                               {isPaid
                                 ? (lang === 'km' ? 'អរគុណសម្រាប់ការគាំទ្រហាង Fashion Store! បានដឹកជញ្ជូន និងបង់ប្រាក់រួចរាល់' : 'Thank you for supporting Fashion Store! (Delivered & Paid)')
                                 : (lang === 'km'
@@ -1854,43 +1835,30 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                         </div>
 
                         {/* Courier & Tracking Code Pill */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            background: 'var(--bg-elevated, #ffffff)',
-                            border: '1px solid var(--border)',
-                            padding: '4px 10px',
-                            borderRadius: 8,
-                            fontSize: 12,
-                          }}
-                        >
+                        <div className="order-courier-pill">
                           <span style={{ color: 'var(--text-muted)' }}>{courierName}</span>
-                          <code style={{ fontWeight: 700, color: '#0284c7' }}>{trackingCode}</code>
+                          <code className="courier-tracking-code">{trackingCode}</code>
                           <button
                             type="button"
-                            className="btn btn-ghost btn-sm"
-                            style={{ padding: '2px 6px', fontSize: 11 }}
+                            className="courier-copy-btn"
                             onClick={() => handleCopy(trackingCode, o.num)}
-                            title={lang === 'km' ? 'ចម្លងលេខ Tracking' : 'Copy Tracking Number'}
+                            title={lang === 'km' ? 'ចម្លងលេខកូដ' : 'Copy Tracking Number'}
                           >
-                            {copiedTracking === o.num ? '✓ Copied' : '📋'}
+                            {copiedTracking === o.num ? (lang === 'km' ? '✓ បានចម្លង' : '✓ Copied') : '📋'}
                           </button>
                         </div>
                       </div>
                     )}
 
-                    {/* ── Visual 5-Stage Stepper / Progress Bar ── */}
-                    <div style={{ padding: '10px 0 6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {/* ── Visual 5-Stage Stepper / Progress Bar with Dynamic Connecting Line ── */}
+                    <div style={{ padding: '8px 0 4px' }}>
+                      <div className="order-stepper-header">
+                        <span className="order-stepper-label">
                           {lang === 'km' ? 'ដំណាក់កាលបញ្ជាទិញ' : 'Order Lifecycle Progress'}
                         </span>
                         <button
                           type="button"
-                          className="btn btn-ghost btn-sm"
-                          style={{ fontSize: 11, color: 'var(--accent-dark, #b45309)', padding: '2px 6px' }}
+                          className="order-stepper-toggle"
                           onClick={() => toggleFlow(o.num)}
                         >
                           {isExpanded
@@ -1899,78 +1867,52 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                         </button>
                       </div>
 
-                      {/* Horizontal Stepper */}
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(5, 1fr)',
-                          gap: 6,
-                          position: 'relative',
-                        }}
-                      >
-                        {STAGES.map((s) => {
-                          const isPassed = currentStage >= s.stage;
-                          const isCurrent = currentStage === s.stage;
+                      {/* Horizontal Stepper with Continuous Connecting Line */}
+                      <div className="order-stepper-track-wrap">
+                        <div className="order-stepper-connector-line">
+                          <div
+                            className="order-stepper-connector-fill"
+                            style={{
+                              width: `${Math.max(0, Math.min(100, ((currentStage - 1) / 4) * 100))}%`,
+                            }}
+                          />
+                        </div>
 
-                          return (
-                            <div
-                              key={s.stage}
-                              style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                textAlign: 'center',
-                                position: 'relative',
-                              }}
-                            >
-                              {/* Step circle */}
+                        <div className="order-stepper-grid">
+                          {STAGES.map((s) => {
+                            const isPassed = currentStage >= s.stage;
+                            const isCurrent = currentStage === s.stage;
+
+                            return (
                               <div
-                                style={{
-                                  width: 34,
-                                  height: 34,
-                                  borderRadius: '50%',
-                                  background: isPassed
-                                    ? (s.stage === 5 ? '#10b981' : '#d4af37')
-                                    : 'var(--warm-gray, #f1f5f9)',
-                                  color: isPassed ? '#ffffff' : 'var(--text-muted)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: 14,
-                                  fontWeight: 700,
-                                  border: isCurrent
-                                    ? '3px solid #f59e0b'
-                                    : isPassed
-                                    ? '2px solid transparent'
-                                    : '1.5px dashed var(--border)',
-                                  boxShadow: isCurrent ? '0 0 0 3px rgba(245, 158, 11, 0.25)' : 'none',
-                                  marginBottom: 6,
-                                  transition: 'all 0.3s ease',
-                                }}
+                                key={s.stage}
+                                className={`order-step-item ${isPassed ? 'is-passed' : ''} ${isCurrent ? 'is-current' : ''}`}
                               >
-                                {isPassed && s.stage < currentStage ? '✓' : s.icon}
-                              </div>
+                                <div className="order-step-bubble">
+                                  {isPassed && s.stage < currentStage ? '✓' : s.icon}
+                                </div>
 
-                              <div style={{ fontSize: 11, fontWeight: isCurrent ? 800 : isPassed ? 600 : 400, color: isCurrent ? 'var(--text-primary)' : isPassed ? 'var(--text-secondary)' : 'var(--text-muted)', lineHeight: 1.2 }}>
-                                {s.title}
+                                <div className="order-step-title">
+                                  {s.title}
+                                </div>
+                                <div className="order-step-actor">
+                                  {s.actor}
+                                </div>
                               </div>
-                              <div style={{ fontSize: 9.5, color: isCurrent ? '#ea580c' : 'var(--text-muted)', marginTop: 2 }}>
-                                {s.actor}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* Detailed Flow Explanation Drawer (Accordion) */}
                       {isExpanded && (
                         <div
                           style={{
-                            marginTop: 14,
-                            padding: 12,
+                            marginTop: 12,
+                            padding: '10px 12px',
                             background: 'var(--bg-elevated, #f8fafc)',
                             border: '1px solid var(--border)',
-                            borderRadius: 10,
+                            borderRadius: 12,
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 8,
@@ -1988,7 +1930,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                                   display: 'flex',
                                   alignItems: 'flex-start',
                                   gap: 10,
-                                  padding: '6px 8px',
+                                  padding: '8px 10px',
                                   borderRadius: 8,
                                   background: isCurrent ? 'rgba(212, 175, 55, 0.12)' : 'transparent',
                                   borderLeft: isCurrent ? '3px solid #d4af37' : '3px solid transparent',
@@ -1996,7 +1938,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                               >
                                 <span style={{ fontSize: 16 }}>{s.icon}</span>
                                 <div style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <strong style={{ color: isCurrent ? '#b45309' : isPassed ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                                       {s.stage}. {s.title}
                                     </strong>
@@ -2010,7 +1952,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                                     {s.sub}
                                   </div>
                                 </div>
-                                <span style={{ fontSize: 12, color: isPassed ? '#10b981' : 'var(--text-muted)', fontWeight: 700 }}>
+                                <span style={{ fontSize: 11.5, color: isPassed ? '#10b981' : 'var(--text-muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>
                                   {isPassed ? (lang === 'km' ? '✓ រួចរាល់' : '✓ Done') : (lang === 'km' ? 'រង់ចាំ' : 'Waiting')}
                                 </span>
                               </div>
@@ -2022,27 +1964,13 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
 
                     {/* ── User Delivery & Cash Confirmation (Controlled by Customer) ── */}
                     {isCod && !isDelivered && (
-                      <div
-                        style={{
-                          marginTop: 12,
-                          padding: '14px 16px',
-                          borderRadius: 12,
-                          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(16, 185, 129, 0.1))',
-                          border: '1.5px solid #d4af37',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          gap: 12,
-                          boxShadow: '0 4px 14px rgba(212, 175, 55, 0.12)',
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 260 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13.5, color: '#92400e' }}>
+                      <div className="order-confirm-box">
+                        <div className="order-confirm-info">
+                          <div className="order-confirm-head">
                             <span>💵🎁</span>
-                            <span>{lang === 'km' ? '[អតិថិជន] ទទួលទំនិញ និងប្រគល់សាច់ប្រាក់ទៅអ្នកដឹកជញ្ជូន' : '[Customer] Receives Goods & Pays Cash to Courier'}</span>
+                            <span>{lang === 'km' ? '[អតិថិជន] ទទួលទំនិញ និងប្រគល់សាច់ប្រាក់' : '[Customer] Receives Goods & Pays Cash'}</span>
                           </div>
-                          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                          <div className="order-confirm-desc">
                             {currentStage >= 4
                               ? (lang === 'km'
                                   ? `តើលោកអ្នកបានទទួលកញ្ចប់ទំនិញ និងប្រគល់សាច់ប្រាក់ចំនួន ${formatUSD(o.total)} (${formatKHR(o.total)}) ជូនអ្នកដឹកជញ្ជូនរួចហើយឬនៅ? សូមចុចប៊ូតុងខាងស្ដាំដើម្បីបញ្ជាក់ និងបញ្ចប់ប្រតិបត្តិការ៖`
@@ -2055,22 +1983,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
 
                         <button
                           type="button"
-                          className="btn btn-primary"
-                          style={{
-                            background: '#10b981',
-                            borderColor: '#10b981',
-                            color: '#ffffff',
-                            fontWeight: 700,
-                            fontSize: 12.5,
-                            padding: '9px 18px',
-                            borderRadius: 8,
-                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
+                          className="order-confirm-btn"
                           onClick={() => handleConfirmReceived(o.num)}
                           disabled={confirmingNum === o.num}
                         >
@@ -2078,7 +1991,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                           <span>
                             {confirmingNum === o.num
                               ? (lang === 'km' ? 'កំពុងបញ្ជាក់…' : 'Confirming…')
-                              : (lang === 'km' ? 'ខ្ញុំបានទទួលទំនិញ & ប្រគល់ប្រាក់រួចរាល់ (Confirm Received)' : 'I Received Goods & Paid Cash (Confirm Received)')}
+                              : (lang === 'km' ? '✓ ខ្ញុំបានទទួលទំនិញ និងប្រគល់ប្រាក់រួចរាល់' : '✓ I Received Goods & Paid Cash')}
                           </span>
                         </button>
                       </div>
@@ -2089,7 +2002,7 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                         style={{
                           marginTop: 10,
                           padding: '10px 14px',
-                          borderRadius: 8,
+                          borderRadius: 10,
                           background: 'rgba(16, 185, 129, 0.08)',
                           border: '1px solid rgba(16, 185, 129, 0.25)',
                           display: 'flex',
@@ -2113,12 +2026,12 @@ export function OrdersModal({ open, orders, onClose, lang: customLang }) {
                     )}
 
                     {/* Products Row */}
-                    <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                      <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                    <div className="order-bottom-row">
+                      <div className="order-items-text">
                         {lang === 'km' ? 'មុខទំនិញ:' : 'Items:'} {(o.products || []).map((p) => `${p.name} (${p.size || 'M'}) ×${p.qty}`).join(', ')}
                       </div>
-                      <div style={{ fontWeight: 800, fontSize: 15 }}>
-                        {formatUSD(o.total)} <span style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>({formatKHR(o.total)})</span>
+                      <div className="order-total-price">
+                        {formatUSD(o.total)} <span className="order-total-khr">({formatKHR(o.total)})</span>
                       </div>
                     </div>
                   </div>
