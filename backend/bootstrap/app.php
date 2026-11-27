@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,15 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         // Global HTTP Security Headers
-        $middleware->append(function (Request $request, \Closure $next) {
-            $response = $next($request);
-            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-            $response->headers->set('X-Content-Type-Options', 'nosniff');
-            $response->headers->set('X-XSS-Protection', '1; mode=block');
-            $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-            return $response;
-        });
+        $middleware->append(SecurityHeadersMiddleware::class);
 
         // Spatie role / permission middleware aliases
         $middleware->alias([
