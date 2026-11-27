@@ -77,10 +77,34 @@ export function getToken() {
 
 export function getUser() {
   try {
-    return JSON.parse(localStorage.getItem(KEYS.USER));
+    const raw = localStorage.getItem(KEYS.USER);
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    if (user) {
+      if (user.avatar) user.avatar = resolveAvatarUrl(user.avatar);
+      if (user.avatar_url) user.avatar_url = resolveAvatarUrl(user.avatar_url);
+    }
+    return user;
   } catch {
     return null;
   }
+}
+
+export function resolveAvatarUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('data:')) return url;
+  if (typeof window !== 'undefined') {
+    if (url.startsWith('http://localhost:8000') || url.startsWith('https://localhost:8000')) {
+      return url.replace(/^https?:\/\/localhost:8000/, window.location.origin);
+    }
+    if (url.startsWith('http://127.0.0.1:8000') || url.startsWith('https://127.0.0.1:8000')) {
+      return url.replace(/^https?:\/\/127\.0\.0\.1:8000/, window.location.origin);
+    }
+    if (url.startsWith('/')) {
+      return `${window.location.origin}${url}`;
+    }
+  }
+  return url;
 }
 
 export function setAuth(token, user) {

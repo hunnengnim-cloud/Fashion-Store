@@ -8,13 +8,24 @@ use App\Http\Controllers\Api\V1\Auth\RegisterController;
 use App\Http\Controllers\Api\V1\Customer\AddressController;
 use App\Http\Controllers\Api\V1\Customer\ProfileController;
 use App\Http\Controllers\Api\V1\Payment\BakongPaymentController;
+use App\Models\Address;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\User;
+use App\Models\Wishlist;
+use App\Models\WishlistItem;
+use App\Services\EmailVerificationService;
 use App\Services\TelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 /*
 |--------------------------------------------------------------------------
@@ -225,14 +236,14 @@ Route::prefix('v1')->group(function (): void {
                     return response()->json(['message' => 'Order deleted successfully.']);
                 })->name('orders.destroy');
                 Route::delete('orders-all', function (): JsonResponse {
-                    if (\Illuminate\Support\Facades\Schema::hasTable('order_items')) {
-                        \App\Models\OrderItem::query()->delete();
+                    if (Schema::hasTable('order_items')) {
+                        OrderItem::query()->delete();
                     }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('payments')) {
-                        \App\Models\Payment::whereNotNull('order_id')->delete();
+                    if (Schema::hasTable('payments')) {
+                        Payment::whereNotNull('order_id')->delete();
                     }
-                    if (\Illuminate\Support\Facades\Schema::hasTable('orders')) {
-                        \App\Models\Order::query()->delete();
+                    if (Schema::hasTable('orders')) {
+                        Order::query()->delete();
                     }
 
                     return response()->json(['message' => 'All orders deleted successfully.']);
@@ -272,21 +283,22 @@ Route::prefix('v1')->group(function (): void {
                     ]);
                 })->name('reports.index');
                 // Users API
-                Route::get('users', function (): JsonResponse {
-                    $users = User::with('roles')->latest()->get()->map(function ($u) {
+                Route::get('users', function (Request $request): JsonResponse {
+                    $baseUrl = $request->getSchemeAndHttpHost();
+                    $users = User::with('roles')->latest()->get()->map(function ($u) use ($baseUrl) {
                         $avatarUrl = null;
                         if ($u->avatar) {
-                            if (filter_var($u->avatar, FILTER_VALIDATE_URL)) {
-                                $avatarUrl = $u->avatar;
+                            if (filter_var($u->avatar, FILTER_VALIDATE_URL) || str_starts_with($u->avatar, 'data:')) {
+                                $avatarUrl = preg_replace('#^https?://(localhost|127\.0\.0\.1):8000#', $baseUrl, $u->avatar);
                             } elseif (str_starts_with($u->avatar, '/')) {
-                                $avatarUrl = asset(ltrim($u->avatar, '/'));
+                                $avatarUrl = $baseUrl.$u->avatar;
                             } else {
-                                $avatarUrl = asset('storage/'.$u->avatar);
+                                $avatarUrl = $baseUrl.'/storage/'.$u->avatar;
                             }
                         } else {
                             $avatarUrl = match (strtolower(trim($u->email ?? ''))) {
-                                'hunnengnim@gmail.com' => asset('avatars/hunnengnim.jpg'),
-                                'neng120726@gmail.com', 'neng12072006@gmail.com' => asset('avatars/neng.jpg'),
+                                'hunnengnim@gmail.com' => $baseUrl.'/avatars/hunnengnim.jpg',
+                                'neng120726@gmail.com', 'neng12072006@gmail.com' => $baseUrl.'/avatars/neng.jpg',
                                 default => $u->email ? 'https://i.pravatar.cc/150?u='.urlencode(strtolower(trim($u->email))) : null,
                             };
                         }
@@ -306,7 +318,7 @@ Route::prefix('v1')->group(function (): void {
                     return response()->json(['data' => $users]);
                 })->name('users.index');
 
-                Route::post('users', function (Request $request, \App\Services\EmailVerificationService $emailVerifier): JsonResponse {
+                Route::post('users', function (Request $request, EmailVerificationService $emailVerifier): JsonResponse {
                     $validated = $request->validate([
                         'name' => 'required|string|max:255',
                         'email' => 'required|string|email|max:255|unique:users,email',
@@ -384,40 +396,40 @@ Route::prefix('v1')->group(function (): void {
                     }
 
                     try {
-                        \Illuminate\Support\Facades\DB::transaction(function () use ($user) {
+                        DB::transaction(function () use ($user) {
                             // 1. Delete associated orders and items (satisfies restrictOnDelete)
-                            if (\Illuminate\Support\Facades\Schema::hasTable('orders')) {
-                                $orders = \App\Models\Order::where('user_id', $user->id)->get();
+                            if (Schema::hasTable('orders')) {
+                                $orders = Order::where('user_id', $user->id)->get();
                                 foreach ($orders as $order) {
-                                    if (\Illuminate\Support\Facades\Schema::hasTable('order_items')) {
-                                        \App\Models\OrderItem::where('order_id', $order->id)->delete();
+                                    if (Schema::hasTable('order_items')) {
+                                        OrderItem::where('order_id', $order->id)->delete();
                                     }
-                                    if (\Illuminate\Support\Facades\Schema::hasTable('payments')) {
-                                        \App\Models\Payment::where('order_id', $order->id)->delete();
+                                    if (Schema::hasTable('payments')) {
+                                        Payment::where('order_id', $order->id)->delete();
                                     }
                                     $order->forceDelete();
                                 }
                             }
 
                             // 2. Delete cart & cart items
-                            if (\Illuminate\Support\Facades\Schema::hasTable('carts')) {
-                                if (\Illuminate\Support\Facades\Schema::hasTable('cart_items')) {
-                                    \App\Models\CartItem::whereHas('cart', fn ($q) => $q->where('user_id', $user->id))->delete();
+                            if (Schema::hasTable('carts')) {
+                                if (Schema::hasTable('cart_items')) {
+                                    CartItem::whereHas('cart', fn ($q) => $q->where('user_id', $user->id))->delete();
                                 }
-                                \App\Models\Cart::where('user_id', $user->id)->delete();
+                                Cart::where('user_id', $user->id)->delete();
                             }
 
                             // 3. Delete wishlist & wishlist items
-                            if (\Illuminate\Support\Facades\Schema::hasTable('wishlists')) {
-                                if (\Illuminate\Support\Facades\Schema::hasTable('wishlist_items')) {
-                                    \App\Models\WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', $user->id))->delete();
+                            if (Schema::hasTable('wishlists')) {
+                                if (Schema::hasTable('wishlist_items')) {
+                                    WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', $user->id))->delete();
                                 }
-                                \App\Models\Wishlist::where('user_id', $user->id)->delete();
+                                Wishlist::where('user_id', $user->id)->delete();
                             }
 
                             // 4. Delete addresses
-                            if (\Illuminate\Support\Facades\Schema::hasTable('addresses')) {
-                                \App\Models\Address::where('user_id', $user->id)->delete();
+                            if (Schema::hasTable('addresses')) {
+                                Address::where('user_id', $user->id)->delete();
                             }
 
                             // 5. Delete tokens & roles
@@ -432,8 +444,8 @@ Route::prefix('v1')->group(function (): void {
                             'status' => 'success',
                             'message' => 'User deleted successfully.',
                         ]);
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('User deletion error: '.$e->getMessage());
+                    } catch (Throwable $e) {
+                        Log::error('User deletion error: '.$e->getMessage());
 
                         return response()->json(['message' => 'Cannot delete user: '.$e->getMessage()], 422);
                     }

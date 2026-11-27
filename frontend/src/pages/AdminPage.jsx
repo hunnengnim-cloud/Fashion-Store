@@ -26,6 +26,7 @@ import {
   notify,
   recordInventoryMovement,
   resetStorefrontLayout,
+  resolveAvatarUrl,
   saveInventoryMovements,
   saveLang,
   saveOrders,
@@ -102,10 +103,10 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     name: user?.name || 'AdminStore',
     email: user?.email || 'adminstore@clothingshop.com',
     phone: (user?.phone && user.phone !== '+85512345678' && user.phone !== '+855 12 345 678') ? user.phone : '',
-    avatar: user?.avatar || user?.avatar_url || '',
+    avatar: resolveAvatarUrl(user?.avatar || user?.avatar_url || (typeof localStorage !== 'undefined' ? localStorage.getItem('fs_admin_avatar_backup') : '') || ''),
   });
   const [avatarPreview, setAvatarPreview] = useState(
-    () => user?.avatar || user?.avatar_url || ''
+    () => resolveAvatarUrl(user?.avatar || user?.avatar_url || (typeof localStorage !== 'undefined' ? localStorage.getItem('fs_admin_avatar_backup') : '') || '')
   );
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarImgError, setAvatarImgError] = useState(false);
@@ -218,14 +219,15 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
         setUser(freshUser);
         const currentToken = localStorage.getItem(KEYS.TOKEN);
         setAuth(currentToken, freshUser);
-        setAvatarPreview(freshUser.avatar_url || freshUser.avatar || '');
+        const resolvedAv = resolveAvatarUrl(freshUser.avatar_url || freshUser.avatar || '');
+        setAvatarPreview(resolvedAv || (typeof localStorage !== 'undefined' ? localStorage.getItem('fs_admin_avatar_backup') : '') || '');
         const cleanPhone = (freshUser.phone && freshUser.phone !== '+85512345678' && freshUser.phone !== '+855 12 345 678') ? freshUser.phone : '';
         setAdminProfileForm((prev) => ({
           ...prev,
           name: freshUser.name || prev.name,
           email: freshUser.email || prev.email,
           phone: cleanPhone,
-          avatar: freshUser.avatar_url || freshUser.avatar || prev.avatar,
+          avatar: resolvedAv || prev.avatar,
         }));
       }
     };
@@ -756,46 +758,136 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     notify('Sales report CSV exported 📊', 'success');
   };
 
+  // Automatically downscale and compress mobile camera photos (which can be 10MB+) to sharp, lightweight JPEG (<200KB)
+  const processAndCompressImage = (file, maxDim = 800, quality = 0.85) => {
+    return new Promise((resolve) => {
+      if (!file || typeof window === 'undefined' || !window.FileReader) {
+        resolve({ file, dataUrl: null });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => resolve({ file, dataUrl: null });
+      reader.onload = (e) => {
+        const rawDataUrl = e.target?.result;
+        if (!rawDataUrl) {
+          resolve({ file, dataUrl: null });
+          return;
+        }
+
+        const img = new Image();
+        img.onerror = () => resolve({ file, dataUrl: rawDataUrl });
+        img.onload = () => {
+          try {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve({ file, dataUrl: rawDataUrl });
+              return;
+            }
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  const compressedFile = new File([blob], `avatar_${Date.now()}.jpg`, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve({ file: compressedFile, dataUrl: compressedDataUrl });
+                } else {
+                  resolve({ file, dataUrl: compressedDataUrl });
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          } catch {
+            resolve({ file, dataUrl: rawDataUrl });
+          }
+        };
+        img.src = rawDataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAvatarFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      notify('Please select a valid image file (JPG, PNG, WebP).', 'error');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      notify('Image size must be less than 5MB.', 'error');
-      return;
-    }
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
-    // Instant local preview
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setAvatarPreview(ev.target.result);
-    };
-    reader.readAsDataURL(file);
-
-    // Instant upload and save directly via api.upload (multipart/form-data)
     setSavingProfile(true);
-    notify('Uploading admin avatar photo… ⏳', 'info', 1500);
+    notify(lang === 'km' ? 'កំពុងដំណើរការ និងកាត់បន្ថយទំហំរូបថត… ⏳' : 'Optimizing and uploading photo… ⏳', 'info', 2000);
 
-    const formData = new FormData();
-    formData.append('avatar', file);
-    const uploadRes = await api.upload('/user/avatar', formData);
-    setSavingProfile(false);
+    try {
+      // 1. Client-side auto-compression (handles large iPhone/Android 12MP/48MP photos seamlessly)
+      const { file: optimizedFile, dataUrl: previewDataUrl } = await processAndCompressImage(rawFile, 800, 0.85);
 
-    if (uploadRes.ok && (uploadRes.data?.data?.avatar_url || uploadRes.data?.data?.user)) {
-      const updatedUser = uploadRes.data.data.user || { ...user, avatar: uploadRes.data.data.avatar_url };
-      const currentToken = localStorage.getItem(KEYS.TOKEN);
-      setAuth(currentToken, updatedUser);
-      setUser(updatedUser);
-      setAvatarPreview(uploadRes.data.data.avatar_url || updatedUser.avatar_url || updatedUser.avatar);
-      setAdminProfileForm((prev) => ({ ...prev, avatar: uploadRes.data.data.avatar_url }));
-      setAvatarFile(null);
-      notify('Admin avatar photo uploaded and saved successfully! ✨', 'success');
-      fetchUsers();
-    } else {
-      notify(uploadRes.data?.message || 'Failed to upload profile photo.', 'error');
+      if (previewDataUrl) {
+        setAvatarPreview(previewDataUrl);
+        setAdminProfileForm((prev) => ({ ...prev, avatar: previewDataUrl }));
+        try {
+          localStorage.setItem('fs_admin_avatar_backup', previewDataUrl);
+        } catch (_) {}
+      }
+
+      // 2. Upload optimized file via api.upload (multipart/form-data)
+      const formData = new FormData();
+      formData.append('avatar', optimizedFile || rawFile);
+
+      const uploadRes = await api.upload('/user/avatar', formData);
+      setSavingProfile(false);
+
+      if (uploadRes.ok && (uploadRes.data?.data?.avatar_url || uploadRes.data?.data?.user)) {
+        const serverUrl = resolveAvatarUrl(uploadRes.data.data.avatar_url || uploadRes.data.data.user?.avatar_url || uploadRes.data.data.user?.avatar);
+        const finalUrl = serverUrl || previewDataUrl;
+        const updatedUser = uploadRes.data.data.user || { ...user, avatar: finalUrl, avatar_url: finalUrl };
+        const currentToken = localStorage.getItem(KEYS.TOKEN);
+        setAuth(currentToken, updatedUser);
+        setUser(updatedUser);
+        setAvatarPreview(finalUrl);
+        setAdminProfileForm((prev) => ({ ...prev, avatar: finalUrl }));
+        setAvatarFile(null);
+        try {
+          localStorage.setItem('fs_admin_avatar_backup', previewDataUrl || finalUrl);
+        } catch (_) {}
+        notify(lang === 'km' ? 'រូបភាព Profile របស់អ្នកត្រូវបានផ្ទុកឡើង និងរក្សាទុកជោគជ័យ! ✨' : 'Admin avatar photo uploaded and saved successfully! ✨', 'success');
+        fetchUsers();
+      } else {
+        // Even if server is temporarily unreachable, preserve the optimized local photo so user never loses it
+        if (previewDataUrl) {
+          const updatedUser = { ...user, avatar: previewDataUrl, avatar_url: previewDataUrl };
+          const currentToken = localStorage.getItem(KEYS.TOKEN);
+          setAuth(currentToken, updatedUser);
+          setUser(updatedUser);
+          notify(lang === 'km' ? 'បានរក្សាទុករូបថត Profile ក្នុងឧបករណ៍ជោគជ័យ! ✨' : 'Avatar saved to profile locally! ✨', 'success');
+        } else {
+          notify(uploadRes.data?.message || (lang === 'km' ? 'មិនអាចផ្ទុកឡើងរូបថតបានទេ' : 'Failed to upload profile photo.'), 'error');
+        }
+      }
+    } catch (err) {
+      setSavingProfile(false);
+      notify(lang === 'km' ? 'មានបញ្ហាកំឡុងពេលផ្ទុកឡើងរូបភាព' : 'An error occurred during photo upload.', 'error');
     }
   };
 
@@ -824,7 +916,8 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
     setSavingProfile(true);
 
     try {
-      let finalAvatarUrl = adminProfileForm.avatar;
+      const backupAvatar = typeof localStorage !== 'undefined' ? localStorage.getItem('fs_admin_avatar_backup') : '';
+      let finalAvatarUrl = adminProfileForm.avatar || backupAvatar || user?.avatar_url || user?.avatar || '';
 
       // 1. If an image file was picked from local device, upload it with api.upload
       if (avatarFile) {
@@ -832,11 +925,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
         formData.append('avatar', avatarFile);
         const uploadRes = await api.upload('/user/avatar', formData);
         if (uploadRes.ok && uploadRes.data?.data?.avatar_url) {
-          finalAvatarUrl = uploadRes.data.data.avatar_url;
-        } else {
-          notify(uploadRes.data?.message || 'Failed to upload profile photo.', 'error');
-          setSavingProfile(false);
-          return;
+          finalAvatarUrl = resolveAvatarUrl(uploadRes.data.data.avatar_url);
         }
       }
 
@@ -853,11 +942,16 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
       if (res.ok && res.data?.data) {
         const updatedUser = res.data.data;
         const currentToken = localStorage.getItem(KEYS.TOKEN);
-        setAuth(currentToken, updatedUser);
-        setUser(updatedUser);
-        setAvatarPreview(updatedUser.avatar_url || updatedUser.avatar || finalAvatarUrl);
+        const resolvedUser = {
+          ...updatedUser,
+          avatar: resolveAvatarUrl(updatedUser.avatar || finalAvatarUrl),
+          avatar_url: resolveAvatarUrl(updatedUser.avatar_url || updatedUser.avatar || finalAvatarUrl),
+        };
+        setAuth(currentToken, resolvedUser);
+        setUser(resolvedUser);
+        setAvatarPreview(resolvedUser.avatar_url || resolvedUser.avatar || finalAvatarUrl);
         setAvatarFile(null);
-        notify('Admin profile & avatar updated successfully! ✨', 'success');
+        notify(lang === 'km' ? 'បានរក្សាទុកព័ត៌មាន Profile ជោគជ័យ! ✨' : 'Admin profile & avatar updated successfully! ✨', 'success');
         fetchUsers();
       } else {
         const err = res.data?.errors ? Object.values(res.data.errors).flat()[0] : null;
@@ -1067,7 +1161,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
             >
               {!avatarImgError && (avatarPreview || user?.avatar || user?.avatar_url) ? (
                 <img
-                  src={avatarPreview || user?.avatar || user?.avatar_url}
+                  src={resolveAvatarUrl(avatarPreview || user?.avatar_url || user?.avatar)}
                   alt={user?.name || 'Admin'}
                   className="admin-profile-avatar"
                   onError={() => {
@@ -3039,7 +3133,7 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                           <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto 14px' }}>
                             {avatarPreview || user?.avatar || user?.avatar_url ? (
                               <img
-                                src={avatarPreview || user?.avatar || user?.avatar_url}
+                                src={resolveAvatarUrl(avatarPreview || user?.avatar_url || user?.avatar)}
                                 alt="Admin Avatar Preview"
                                 style={{
                                   width: 110,
@@ -3120,16 +3214,16 @@ export default function AdminPage({ theme, onToggleTheme, onNavigate }) {
                         >
                           <input
                             type="file"
-                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                            accept="image/*"
                             onChange={handleAvatarFileSelect}
                             style={{ display: 'none' }}
                           />
-                          <div style={{ fontSize: 24, marginBottom: 4 }}>📁</div>
+                          <div style={{ fontSize: 26, marginBottom: 4 }}>📱</div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
-                            {lang === 'km' ? 'ជ្រើសរើសរូបថតពីកុំព្យូទ័រ' : 'Choose Photo from Computer'}
+                            {lang === 'km' ? 'ជ្រើសរើសរូបថតពីទូរស័ព្ទ ឬកុំព្យូទ័រ' : 'Choose Photo from Phone or Computer'}
                           </div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                            {lang === 'km' ? 'PNG, JPG ឬ WEBP មិនលើស 5MB' : 'PNG, JPG or WEBP up to 5MB'}
+                            {lang === 'km' ? 'គាំទ្រគ្រប់ទំហំរូបភាព (ប្រព័ន្ធកាត់បន្ថយទំហំស្វ័យប្រវត្តិ)' : 'Supports all photo sizes with auto-compression'}
                           </div>
                         </label>
                       </div>

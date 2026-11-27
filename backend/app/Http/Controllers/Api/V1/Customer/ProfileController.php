@@ -90,21 +90,27 @@ class ProfileController extends Controller
     public function uploadAvatar(Request $request): JsonResponse
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+            'avatar' => ['required', 'file', 'max:25600'], // Support up to 25MB for modern smartphone camera photos
         ]);
 
         $file = $request->file('avatar');
-        $filename = 'avatar_'.$request->user()->id.'_'.time().'.'.$file->getClientOriginalExtension();
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'], true)) {
+            $ext = 'jpg';
+        }
 
-        // Save to public/avatars directly for 100% reliable serving on Windows
+        $filename = 'avatar_'.$request->user()->id.'_'.time().'.'.$ext;
+
+        // Save to public/avatars directly for 100% reliable serving on all platforms
         $destDir = public_path('avatars');
         if (! is_dir($destDir)) {
             @mkdir($destDir, 0755, true);
         }
         $file->move($destDir, $filename);
 
+        $baseUrl = $request->getSchemeAndHttpHost();
         $avatarPath = '/avatars/'.$filename;
-        $avatarUrl = asset('avatars/'.$filename);
+        $avatarUrl = $baseUrl.$avatarPath;
 
         $request->user()->update(['avatar' => $avatarPath]);
 
